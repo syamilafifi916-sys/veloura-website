@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payment Failed | Veloura</title>
+<style>
+:root{
+--primary:#ED337F;--primary-dark:#B91F60;--secondary:#ED337F;
+--danger:#C44536;--border:#F1E8D8;
+}
+body{margin:0;font-family:Arial,sans-serif;background:#FFF7EA;color:#2B1E22;min-height:100vh;display:grid;place-items:center;padding:20px}
+.card{width:min(700px,95%);background:white;border:1px solid var(--border);border-radius:24px;padding:40px;text-align:center;box-shadow:0 12px 40px rgba(43,30,34,.10)}
+.logo{letter-spacing:7px;color:var(--secondary);font-weight:900;font-size:28px;margin-bottom:20px}
+.icon{width:90px;height:90px;border-radius:50%;background:#fff1f1;color:var(--danger);display:grid;place-items:center;font-size:48px;margin:0 auto 20px}
+h1{color:var(--danger);margin-bottom:10px}
+p{color:#4D3B40;line-height:1.7}
+.info{background:#FFF1F7;border:1px solid #F1E8D8;border-radius:12px;padding:16px;margin:24px 0}
+.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:25px}
+.btn{text-decoration:none;text-align:center;padding:14px;border-radius:12px;font-weight:800}
+.primary{background:var(--primary);color:white}
+.secondary{background:#FFF1F7;color:#2B1E22}
+.whatsapp{background:#25D366;color:white}
+@media(max-width:700px){.actions{grid-template-columns:1fr}}
+
+/* VELOURA OFFICIAL BRAND COLOR OVERRIDE */
+:root{
+  --primary:#ED337F !important;
+  --primary-dark:#B91F60 !important;
+  --secondary:#ED337F !important;
+  --neutral-dark:#2B1E22 !important;
+  --neutral-bg:#FFF7EA !important;
+  --text:#4D3B40 !important;
+  --text-light:#8B7A7E !important;
+  --border:#F1E8D8 !important;
+  --shadow:0 8px 30px rgba(43,30,34,.08) !important;
+}
+body{
+  background:#FFF7EA !important;
+  color:#4D3B40 !important;
+}
+.logo,
+h1,
+a{
+  color:#ED337F !important;
+}
+.card{
+  border-color:#F1E8D8 !important;
+  box-shadow:0 12px 40px rgba(237,51,127,.10) !important;
+}
+button,
+.primary{
+  background:#ED337F !important;
+  color:#fff !important;
+}
+button:hover,
+.primary:hover{
+  background:#B91F60 !important;
+}
+.secondary,
+.notice,
+.info,
+.note,
+.status-pill,
+.step-number{
+  background:#FFF1F7 !important;
+  color:#2B1E22 !important;
+}
+input,
+textarea,
+select{
+  border-color:#F1E8D8 !important;
+}
+.step.active{
+  border-color:#ED337F !important;
+  background:#FFF1F7 !important;
+}
+.step.active .step-number{
+  background:#ED337F !important;
+  color:#fff !important;
+}
+.order{
+  background:#FFF1F7 !important;
+  color:#ED337F !important;
+}
+
+</style>
+</head>
+<body>
+<div class="card">
+<div class="logo">VELOURA</div>
+
+<div class="icon">✕</div>
+
+<h1>Payment Failed</h1>
+
+<p>Pembayaran anda tidak dapat diproses atau telah dibatalkan.</p>
+
+<div class="info">
+Sila cuba semula menggunakan FPX, kad debit/kredit atau kaedah pembayaran lain yang tersedia.
+</div>
+
+<div class="actions">
+<a class="btn primary" href="checkout.html">Try Again</a>
+<a class="btn secondary" href="index.html">Back To Shop</a>
+<a class="btn whatsapp" href="https://wa.me/60123456789" target="_blank">WhatsApp Support</a>
+</div>
+
+</div>
+</body>
+</html>

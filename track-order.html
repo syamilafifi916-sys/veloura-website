@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Track Order | Veloura</title>
+<style>
+:root{
+  --primary:#ED337F;
+  --primary-dark:#B91F60;
+  --secondary:#ED337F;
+  --neutral-dark:#2B1E22;
+  --neutral-bg:#FFF7EA;
+  --text:#4D3B40;
+  --text-light:#8B7A7E;
+  --border:#F1E8D8;
+  --success:#2e7d32;
+  --danger:#C44536;
+  --shadow:0 8px 30px rgba(43,30,34,.08);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:var(--neutral-bg);color:var(--text);line-height:1.6}
+.container{max-width:900px;margin:auto;padding:34px 20px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:26px}
+.logo{font-weight:900;letter-spacing:7px;color:var(--secondary);font-size:28px}
+a{color:var(--primary);font-weight:700;text-decoration:none}
+.card{background:white;border:1px solid var(--border);border-radius:20px;padding:26px;box-shadow:var(--shadow);margin-bottom:18px}
+h1,h2,h3{color:var(--neutral-dark);margin:0 0 14px}
+h1{font-family:Georgia,serif;font-size:clamp(34px,5vw,56px);line-height:1}
+label{display:block;margin:14px 0 6px;font-weight:800;color:var(--neutral-dark)}
+input{width:100%;padding:14px;border:1px solid var(--border);border-radius:12px;font:inherit}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+button{width:100%;padding:15px;border:none;border-radius:12px;background:var(--primary);color:white;font-weight:900;margin-top:18px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px}
+button:hover{background:var(--primary-dark)}
+.status-pill{display:inline-block;padding:7px 12px;border-radius:999px;background:#FFF1F7;color:var(--neutral-dark);font-weight:800}
+.status-paid,.status-delivered{background:#e8f7ec;color:var(--success)}
+.status-cancelled{background:#fff1f1;color:var(--danger)}
+.timeline{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:20px}
+.step{text-align:center;position:relative;padding:14px 8px;border:1px solid var(--border);border-radius:14px;background:#fff}
+.step.active{border-color:var(--primary);background:#FFF1F7}
+.step.done{border-color:var(--success);background:#f0fbf3}
+.step-number{width:28px;height:28px;border-radius:50%;background:#FFF1F7;display:grid;place-items:center;margin:0 auto 8px;font-weight:900}
+.step.done .step-number{background:var(--success);color:#fff}
+.step.active .step-number{background:var(--primary);color:#fff}
+.small{font-size:13px;color:var(--text-light)}
+.item{padding:12px 0;border-bottom:1px solid var(--border)}
+.error{color:var(--danger);font-weight:800;margin-top:12px}
+.hidden{display:none}
+@media(max-width:720px){.grid,.timeline{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column;gap:12px}}
+
+/* VELOURA BRAND COLOR OVERRIDE */
+body{
+  background:#FFF7EA !important;
+  color:#4D3B40 !important;
+}
+.logo,
+h1,
+a{
+  color:#ED337F !important;
+}
+.card{
+  border-color:#F1E8D8 !important;
+  box-shadow:0 15px 50px rgba(237,51,127,.10) !important;
+}
+button{
+  background:#ED337F !important;
+  color:#fff !important;
+}
+button:hover{
+  background:#B91F60 !important;
+}
+input{
+  border-color:#F1E8D8 !important;
+}
+.status-pill,
+.step-number{
+  background:#FFF1F7 !important;
+}
+.step.active{
+  border-color:#ED337F !important;
+  background:#FFF1F7 !important;
+}
+.step.active .step-number{
+  background:#ED337F !important;
+  color:#fff !important;
+}
+
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="top">
+    <a href="index.html">← Back to Shop</a>
+    <div class="logo">VELOURA</div>
+  </div>
+
+  <div class="card">
+    <h1>Track Your Order</h1>
+    <p class="small">Masukkan order number dan email yang digunakan semasa checkout.</p>
+
+    <form id="trackForm">
+      <div class="grid">
+        <div>
+          <label>Order Number</label>
+          <input id="orderNumber" required placeholder="Contoh: VEL-MQA71297">
+        </div>
+        <div>
+          <label>Email</label>
+          <input id="email" type="email" required placeholder="email@example.com">
+        </div>
+      </div>
+      <button type="submit">Track Order</button>
+      <div class="error" id="errorMsg"></div>
+    </form>
+  </div>
+
+  <div class="card hidden" id="resultCard">
+    <h2>Order Details</h2>
+    <p><strong>Order:</strong> <span id="showOrderNo"></span></p>
+    <p><strong>Customer:</strong> <span id="showCustomer"></span></p>
+    <p><strong>Payment:</strong> <span id="showPayment"></span></p>
+    <p><strong>Status:</strong> <span id="showStatus"></span></p>
+
+    <div class="timeline" id="timeline"></div>
+
+    <h3 style="margin-top:24px">Items</h3>
+    <div id="itemsList"></div>
+
+    <div id="shippingBox" style="margin-top:20px"></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBePIBUOZ9WApSG2MyXjOBzFRpDzH63NlI",
+  authDomain: "veloura-b86d8.firebaseapp.com",
+  projectId: "veloura-b86d8",
+  storageBucket: "veloura-b86d8.firebasestorage.app",
+  messagingSenderId: "425278142821",
+  appId: "1:425278142821:web:59861b129be1bd648c098c"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const statusFlow = ["pending", "paid", "processing", "shipped", "delivered"];
+
+function normalizeStatus(status, paymentStatus){
+  if(status === "completed") return "delivered";
+  if(status === "in_production") return "processing";
+  if(status === "ready_to_ship") return "processing";
+  if(paymentStatus === "paid" && (!status || status === "pending")) return "paid";
+  return status || "pending";
+}
+
+function statusLabel(status){
+  const labels = {
+    pending: "Pending Payment",
+    pending_payment: "Pending Payment",
+    paid: "Paid",
+    processing: "Processing",
+    shipped: "Shipped",
+    delivered: "Delivered",
+    cancelled: "Cancelled"
+  };
+  return labels[status] || status;
+}
+
+function renderTimeline(status){
+  const normalized = normalizeStatus(status);
+  const activeIndex = statusFlow.indexOf(normalized);
+  const cancelled = normalized === "cancelled";
+
+  if(cancelled){
+    document.getElementById("timeline").innerHTML = '<div class="step active" style="grid-column:1/-1"><div class="step-number">!</div><strong>Cancelled</strong><div class="small">Order ini telah dibatalkan.</div></div>';
+    return;
+  }
+
+  document.getElementById("timeline").innerHTML = statusFlow.map((step, index) => {
+    const done = activeIndex >= index;
+    const active = activeIndex === index;
+    return `
+      <div class="step ${done ? "done" : ""} ${active ? "active" : ""}">
+        <div class="step-number">${done ? "✓" : index + 1}</div>
+        <strong>${statusLabel(step)}</strong>
+      </div>
+    `;
+  }).join("");
+}
+
+async function findOrder(orderNumber, email){
+  const q1 = query(
+    collection(db, "Orders"),
+    where("orderNumber", "==", orderNumber)
+  );
+
+  const snap = await getDocs(q1);
+
+  const results = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+
+  return results.find(order => {
+    const orderEmail = String(order.email || order.customer?.email || "").toLowerCase();
+    return orderEmail === email.toLowerCase();
+  });
+}
+
+document.getElementById("trackForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const errorMsg = document.getElementById("errorMsg");
+  const resultCard = document.getElementById("resultCard");
+  errorMsg.textContent = "";
+  resultCard.classList.add("hidden");
+
+  const orderNumber = document.getElementById("orderNumber").value.trim();
+  const email = document.getElementById("email").value.trim();
+
+  try{
+    const order = await findOrder(orderNumber, email);
+
+    if(!order){
+      errorMsg.textContent = "Order tidak dijumpai. Semak order number dan email.";
+      return;
+    }
+
+    const paymentStatus = order.paymentStatus || "unpaid";
+    const status = normalizeStatus(order.status, paymentStatus);
+
+    document.getElementById("showOrderNo").textContent = order.orderNumber || order.orderNo || order.id;
+    document.getElementById("showCustomer").textContent = order.customerName || order.customer?.name || "-";
+    document.getElementById("showPayment").innerHTML = `<span class="status-pill ${paymentStatus === "paid" ? "status-paid" : ""}">${paymentStatus}</span>`;
+    document.getElementById("showStatus").innerHTML = `<span class="status-pill status-${status}">${statusLabel(status)}</span>`;
+
+    renderTimeline(status);
+
+    const items = Array.isArray(order.items) ? order.items : [];
+    document.getElementById("itemsList").innerHTML = items.map(item => `
+      <div class="item">
+        <strong>${item.name || "Item"}</strong><br>
+        <span class="small">Size: ${item.size || "-"} · Colour: ${item.color || "-"} · Qty: ${item.qty || 1}</span>
+      </div>
+    `).join("") || "<p>-</p>";
+
+    if(order.trackingNumber){
+      document.getElementById("shippingBox").innerHTML = `
+        <h3>Shipping</h3>
+        <p><strong>Courier:</strong> ${order.courier || "-"}</p>
+        <p><strong>Tracking Number:</strong> ${order.trackingNumber}</p>
+      `;
+    } else {
+      document.getElementById("shippingBox").innerHTML = `
+        <h3>Shipping</h3>
+        <p class="small">Tracking number belum tersedia.</p>
+      `;
+    }
+
+    resultCard.classList.remove("hidden");
+
+  }catch(error){
+    console.error(error);
+    errorMsg.textContent = "Tidak dapat semak order buat masa ini. Sila cuba lagi.";
+  }
+});
+</script>
+</body>
+</html>

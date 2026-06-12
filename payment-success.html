@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payment Successful | Veloura</title>
+<style>
+:root{
+--primary:#ED337F;--primary-dark:#B91F60;--secondary:#ED337F;
+--neutral-dark:#2B1E22;--neutral-bg:#FFF7EA;--border:#F1E8D8;
+}
+body{margin:0;font-family:Arial,sans-serif;background:var(--neutral-bg);color:#2B1E22;min-height:100vh;display:grid;place-items:center;padding:20px}
+.card{width:min(700px,95%);background:white;border:1px solid var(--border);border-radius:24px;padding:40px;box-shadow:0 12px 40px rgba(43,30,34,.10)}
+.logo{letter-spacing:7px;color:var(--secondary);font-weight:900;font-size:28px;text-align:center;margin-bottom:20px}
+.success{width:90px;height:90px;border-radius:50%;background:#e8f7ec;color:#2e7d32;display:grid;place-items:center;font-size:48px;margin:0 auto 20px}
+h1{text-align:center;color:#2e7d32;margin:0 0 10px}
+p{text-align:center;color:#4D3B40}
+.info{background:#FFF1F7;border-radius:14px;padding:18px;margin:24px 0}
+.row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #F1E8D8}
+.row:last-child{border-bottom:none}
+.label{font-weight:700}
+.value{font-weight:800}
+.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:25px}
+.btn{text-decoration:none;text-align:center;padding:14px;border-radius:12px;font-weight:800}
+.primary{background:var(--primary);color:white}
+.secondary{background:#FFF1F7;color:#2B1E22}
+.whatsapp{background:#25D366;color:white}
+.note{background:#FFF1F7;border:1px solid #F1E8D8;border-radius:12px;padding:16px;margin-top:20px}
+@media(max-width:700px){.actions{grid-template-columns:1fr}}
+
+/* VELOURA OFFICIAL BRAND COLOR OVERRIDE */
+:root{
+  --primary:#ED337F !important;
+  --primary-dark:#B91F60 !important;
+  --secondary:#ED337F !important;
+  --neutral-dark:#2B1E22 !important;
+  --neutral-bg:#FFF7EA !important;
+  --text:#4D3B40 !important;
+  --text-light:#8B7A7E !important;
+  --border:#F1E8D8 !important;
+  --shadow:0 8px 30px rgba(43,30,34,.08) !important;
+}
+body{
+  background:#FFF7EA !important;
+  color:#4D3B40 !important;
+}
+.logo,
+h1,
+a{
+  color:#ED337F !important;
+}
+.card{
+  border-color:#F1E8D8 !important;
+  box-shadow:0 12px 40px rgba(237,51,127,.10) !important;
+}
+button,
+.primary{
+  background:#ED337F !important;
+  color:#fff !important;
+}
+button:hover,
+.primary:hover{
+  background:#B91F60 !important;
+}
+.secondary,
+.notice,
+.info,
+.note,
+.status-pill,
+.step-number{
+  background:#FFF1F7 !important;
+  color:#2B1E22 !important;
+}
+input,
+textarea,
+select{
+  border-color:#F1E8D8 !important;
+}
+.step.active{
+  border-color:#ED337F !important;
+  background:#FFF1F7 !important;
+}
+.step.active .step-number{
+  background:#ED337F !important;
+  color:#fff !important;
+}
+.order{
+  background:#FFF1F7 !important;
+  color:#ED337F !important;
+}
+
+</style>
+</head>
+<body>
+<div class="card">
+<div class="logo">VELOURA</div>
+
+<div class="success">✓</div>
+
+<h1>Payment Successful</h1>
+<p>Terima kasih. Pembayaran anda telah berjaya diterima.</p>
+
+<div class="info">
+<div class="row">
+<span class="label">Order Number</span>
+<span class="value" id="orderNo">-</span>
+</div>
+<div class="row">
+<span class="label">Payment Status</span>
+<span class="value">PAID</span>
+</div>
+<div class="row">
+<span class="label">Date & Time</span>
+<span class="value" id="paidTime"></span>
+</div>
+</div>
+
+<div class="note">
+Kami sedang memproses pesanan anda. Maklumat penghantaran dan tracking number akan dikemaskini sebaik sahaja order dipos.
+</div>
+
+<div class="actions">
+<a class="btn primary" id="trackBtn" href="track-order.html">Track My Order</a>
+<a class="btn secondary" href="index.html">Continue Shopping</a>
+<a class="btn whatsapp" href="https://wa.me/60123456789" target="_blank">WhatsApp Support</a>
+</div>
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const order = params.get("order") || params.get("orderNumber") || "-";
+
+document.getElementById("orderNo").textContent = order;
+document.getElementById("paidTime").textContent = new Date().toLocaleString();
+
+if(order && order !== "-"){
+  document.getElementById("trackBtn").href =
+    "track-order.html?order=" + encodeURIComponent(order);
+}
+</script>
+</body>
+</html>

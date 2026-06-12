@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Veloura Admin</title>
+<style>
+body{font-family:Arial,sans-serif;margin:0;background:#FFFBF7;color:#2C1810}.wrap{max-width:1180px;margin:auto;padding:28px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center}.card{background:#fff;border:1px solid #E8DED2;border-radius:16px;padding:18px;margin:16px 0;box-shadow:0 8px 30px rgba(44,24,16,.08)}input,select,button{padding:12px;border-radius:10px;border:1px solid #E8DED2}button{background:#8B5A2B;color:#fff;cursor:pointer}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.stat strong{font-size:28px;display:block}table{width:100%;border-collapse:collapse;background:#fff;border-radius:16px;overflow:hidden}th,td{padding:12px;border-bottom:1px solid #E8DED2;text-align:left;font-size:14px}.login{max-width:420px;margin:10vh auto}.hidden{display:none}.actions{display:flex;gap:8px;flex-wrap:wrap}@media(max-width:800px){.grid{grid-template-columns:1fr 1fr}table{font-size:12px}.wrap{padding:16px}}
+</style>
+</head>
+<body>
+<div id="loginBox" class="login card">
+  <h1>Veloura Admin</h1>
+  <p>Login admin untuk urus order.</p>
+  <input id="email" type="email" placeholder="Admin email" style="width:100%;box-sizing:border-box;margin-bottom:10px">
+  <input id="password" type="password" placeholder="Password" style="width:100%;box-sizing:border-box;margin-bottom:10px">
+  <button id="loginBtn" style="width:100%">Login</button>
+</div>
+
+<div id="app" class="wrap hidden">
+  <div class="top">
+    <div><h1>Veloura Admin Dashboard</h1><p>Order, payment dan production status.</p></div>
+    <button id="logoutBtn">Logout</button>
+  </div>
+
+  <div class="grid">
+    <div class="card stat"><span>Total Orders</span><strong id="totalOrders">0</strong></div>
+    <div class="card stat"><span>Paid</span><strong id="paidOrders">0</strong></div>
+    <div class="card stat"><span>Pending</span><strong id="pendingOrders">0</strong></div>
+    <div class="card stat"><span>Revenue</span><strong>RM <span id="revenue">0</span></strong></div>
+  </div>
+
+  <div class="card">
+    <input id="search" placeholder="Search nama / phone / order no" style="width:100%;box-sizing:border-box">
+  </div>
+
+  <div class="card">
+    <table>
+      <thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Status</th><th>Updated</th><th>Action</th></tr></thead>
+      <tbody id="ordersBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import { firebaseConfig } from '../js/firebase-config.js';
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+let allOrders = [];
+
+const $ = id => document.getElementById(id);
+$('loginBtn').onclick = async () => {
+  try { await signInWithEmailAndPassword(auth, $('email').value, $('password').value); }
+  catch(e){ alert(e.message); }
+};
+$('logoutBtn').onclick = () => signOut(auth);
+$('search').oninput = renderOrders;
+
+onAuthStateChanged(auth, user => {
+  $('loginBox').classList.toggle('hidden', !!user);
+  $('app').classList.toggle('hidden', !user);
+  if (user) listenOrders();
+});
+
+function listenOrders(){
+  const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
+  onSnapshot(q, snap => {
+    allOrders = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+    renderOrders();
+  });
+}
+
+function renderOrders(){
+  const term = ($('search').value || '').toLowerCase();
+  const filtered = allOrders.filter(o => JSON.stringify(o).toLowerCase().includes(term));
+  $('totalOrders').textContent = allOrders.length;
+  $('paidOrders').textContent = allOrders.filter(o => o.status === 'paid').length;
+  $('pendingOrders').textContent = allOrders.filter(o => o.status === 'pending_payment').length;
+  $('revenue').textContent = allOrders.filter(o => o.status === 'paid').reduce((s,o)=>s+Number(o.total||0),0).toFixed(2);
+
+  $('ordersBody').innerHTML = filtered.map(o => `
+    <tr>
+      <td><strong>${o.orderNo || o.id}</strong><br><small>${o.gatewayRef || ''}</small></td>
+      <td>${o.customer?.name || '-'}<br><small>${o.customer?.phone || ''}</small></td>
+      <td>RM ${Number(o.total || 0).toFixed(2)}</td>
+      <td>
+        <select data-id="${o.id}" class="statusSelect">
+          ${['pending_payment','paid','in_production','ready_to_ship','shipped','completed','cancelled','failed'].map(s => `<option value="${s}" ${o.status===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </td>
+      <td><small>${o.updatedAt || o.createdAt || ''}</small></td>
+      <td><button data-id="${o.id}" class="viewBtn">View</button></td>
+    </tr>`).join('');
+
+  document.querySelectorAll('.statusSelect').forEach(el => el.onchange = async e => {
+    await updateDoc(doc(db,'orders', e.target.dataset.id), { status:e.target.value, updatedAt:new Date().toISOString() });
+  });
+  document.querySelectorAll('.viewBtn').forEach(btn => btn.onclick = () => {
+    const o = allOrders.find(x => x.id === btn.dataset.id);
+    alert(JSON.stringify(o, null, 2));
+  });
+}
+</script>
+</body>
+</html>

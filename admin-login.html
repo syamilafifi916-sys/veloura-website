@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Veloura Admin Login</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: Arial, sans-serif;
+      background: #FFF7EA;
+      color: #2B1E22;
+    }
+
+    .card {
+      width: min(420px, 92%);
+      background: white;
+      padding: 36px;
+      border-radius: 18px;
+      box-shadow: 0 15px 50px rgba(237,51,127,.12);
+      border: 1px solid #F1E8D8;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      color: #ED337F;
+      letter-spacing: 4px;
+    }
+
+    p {
+      margin: 0 0 26px;
+      color: #8B7A7E;
+    }
+
+    label {
+      display: block;
+      margin: 16px 0 6px;
+      font-weight: 600;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid #F1E8D8;
+      font-size: 15px;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 22px;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      background: #ED337F;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .error {
+      margin-top: 14px;
+      color: #C44536;
+      font-size: 14px;
+    }
+  
+/* VELOURA BRAND COLOR OVERRIDE */
+body{
+  background:#FFF7EA !important;
+  color:#4D3B40 !important;
+}
+.logo,
+h1,
+a{
+  color:#ED337F !important;
+}
+.card{
+  border-color:#F1E8D8 !important;
+  box-shadow:0 15px 50px rgba(237,51,127,.10) !important;
+}
+button{
+  background:#ED337F !important;
+  color:#fff !important;
+}
+button:hover{
+  background:#B91F60 !important;
+}
+input{
+  border-color:#F1E8D8 !important;
+}
+.status-pill,
+.step-number{
+  background:#FFF1F7 !important;
+}
+.step.active{
+  border-color:#ED337F !important;
+  background:#FFF1F7 !important;
+}
+.step.active .step-number{
+  background:#ED337F !important;
+  color:#fff !important;
+}
+
+</style>
+</head>
+
+<body>
+  <div class="card">
+    <h1>VELOURA</h1>
+    <p>Admin Dashboard Login</p>
+
+    <form id="loginForm">
+      <label>Email</label>
+      <input type="email" id="email" required placeholder="admin@veloura.my" />
+
+      <label>Password</label>
+      <input type="password" id="password" required placeholder="Password" />
+
+      <button type="submit">Login</button>
+      <div class="error" id="errorMsg"></div>
+    </form>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBePIBUOZ9WApSG2MyXjOBzFRpDzH63NlI",
+      authDomain: "veloura-b86d8.firebaseapp.com",
+      projectId: "veloura-b86d8",
+      storageBucket: "veloura-b86d8.firebasestorage.app",
+      messagingSenderId: "425278142821",
+      appId: "1:425278142821:web:59861b129be1bd648c098c"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const errorMsg = document.getElementById("errorMsg");
+
+      errorMsg.textContent = "";
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        window.location.href = "admin.html";
+      } catch (error) {
+        errorMsg.textContent = "Login gagal. Semak email atau password.";
+      }
+    });
+  </script>
+</body>
+</html>

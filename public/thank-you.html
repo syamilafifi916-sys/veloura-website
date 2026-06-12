@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thank You | Veloura</title>
+<style>
+body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:Arial,sans-serif;background:#FFF7EA;color:#2B1E22}
+.card{width:min(560px,92%);background:white;border:1px solid #F1E8D8;border-radius:20px;padding:38px;text-align:center;box-shadow:0 8px 30px rgba(43,30,34,.08)}
+.logo{font-weight:800;letter-spacing:7px;color:#ED337F;font-size:28px;margin-bottom:18px}
+h1{font-family:Georgia,serif;font-size:42px;margin:0 0 12px}
+p{color:#8B7A7E;line-height:1.7}
+.order{background:#FFF1F7;border-radius:12px;padding:14px;margin:18px 0;font-weight:800;color:#ED337F}
+a{display:inline-flex;margin-top:16px;background:#ED337F;color:white;text-decoration:none;padding:14px 24px;border-radius:12px;font-weight:800}
+
+/* VELOURA OFFICIAL BRAND COLOR OVERRIDE */
+:root{
+  --primary:#ED337F !important;
+  --primary-dark:#B91F60 !important;
+  --secondary:#ED337F !important;
+  --neutral-dark:#2B1E22 !important;
+  --neutral-bg:#FFF7EA !important;
+  --text:#4D3B40 !important;
+  --text-light:#8B7A7E !important;
+  --border:#F1E8D8 !important;
+  --shadow:0 8px 30px rgba(43,30,34,.08) !important;
+}
+body{
+  background:#FFF7EA !important;
+  color:#4D3B40 !important;
+}
+.logo,
+h1,
+a{
+  color:#ED337F !important;
+}
+.card{
+  border-color:#F1E8D8 !important;
+  box-shadow:0 12px 40px rgba(237,51,127,.10) !important;
+}
+button,
+.primary{
+  background:#ED337F !important;
+  color:#fff !important;
+}
+button:hover,
+.primary:hover{
+  background:#B91F60 !important;
+}
+.secondary,
+.notice,
+.info,
+.note,
+.status-pill,
+.step-number{
+  background:#FFF1F7 !important;
+  color:#2B1E22 !important;
+}
+input,
+textarea,
+select{
+  border-color:#F1E8D8 !important;
+}
+.step.active{
+  border-color:#ED337F !important;
+  background:#FFF1F7 !important;
+}
+.step.active .step-number{
+  background:#ED337F !important;
+  color:#fff !important;
+}
+.order{
+  background:#FFF1F7 !important;
+  color:#ED337F !important;
+}
+
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">VELOURA</div>
+  <h1>Thank You</h1>
+  <p>Your order has been submitted successfully. Our team will process your order and contact you soon.</p>
+  <div class="order">Order No: <span id="orderNo">-</span></div>
+  <a href="index.html">Back to Shop</a>
+</div>
+<script>
+const params = new URLSearchParams(window.location.search);
+document.getElementById("orderNo").textContent = params.get("order") || "-";
+</script>
+</body>
+</html>

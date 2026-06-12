@@ -1,0 +1,16 @@
+{
+  "name": "veloura-backend-starter",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.7.0",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "vercel": "^39.0.0"
+  }
+}
