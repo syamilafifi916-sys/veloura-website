@@ -43,6 +43,19 @@
     .pagination button{background:#FFF1F7;color:#ED337F}
     .pagination button:disabled{opacity:.45;cursor:not-allowed}
     .delete-order{background:#7a1f1f;color:white}
+    .product-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .edit-btn{background:#FFF1F7;color:#ED337F}
+    .product-thumb{width:64px;height:82px;object-fit:cover;border-radius:10px;background:#FFF1F7;margin-top:8px;border:1px solid #F4D7E5}
+    .modal-overlay{position:fixed;inset:0;background:rgba(43,30,34,.45);z-index:9998;display:none;align-items:flex-start;justify-content:center;padding:32px 14px;overflow:auto}
+    .modal-overlay.active{display:flex}
+    .modal-card{width:min(760px,100%);background:#fff;border-radius:18px;border:1px solid #F4D7E5;box-shadow:0 18px 60px rgba(44,24,16,.22);padding:22px}
+    .modal-header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+    .modal-header h2{margin:0}
+    .modal-close{background:#FFF1F7;color:#ED337F}
+    .edit-form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    .edit-form-grid textarea,.edit-form-grid .full{grid-column:1/-1}
+    .image-preview{width:120px;height:150px;object-fit:cover;border-radius:12px;background:#FFF1F7;border:1px solid #F4D7E5;margin-top:8px}
+    .upload-note{font-size:12px;color:#8C7C6C;line-height:1.4}
     @media(max-width:1000px){.filters{grid-template-columns:1fr 1fr 1fr}}
     @media(max-width:800px){.filters{grid-template-columns:1fr}.orders-toolbar{align-items:flex-start;flex-direction:column}}
     .notice{background:#fff3cd;border:1px solid #ffe08a;color:#5c3a1e;border-radius:12px;padding:12px;margin-bottom:16px;display:none}
@@ -88,7 +101,8 @@
         <input id="price" type="number" placeholder="Sale Price" required />
         <input id="oriPrice" type="number" placeholder="Original Price" />
         <input id="stock" type="number" placeholder="Stock" />
-        <input id="imageUrl" placeholder="Image URL" />
+        <input id="imageUrl" placeholder="Image URL (optional if uploading image)" />
+        <input id="productImageFile" type="file" accept="image/*" />
         <textarea id="description" placeholder="Description"></textarea>
       </div>
       <button class="save" type="submit">Save Product</button>
@@ -196,12 +210,75 @@
   </div>
 </main>
 
+<div class="modal-overlay" id="editProductModal" aria-hidden="true">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2>Edit Product</h2>
+      <button type="button" class="modal-close" onclick="closeEditProductModal()">Close</button>
+    </div>
+
+    <form id="editProductForm">
+      <input type="hidden" id="editProductId">
+      <input type="hidden" id="editProductCollection">
+
+      <div class="edit-form-grid">
+        <div>
+          <label>Product Name</label>
+          <input id="editName" required>
+        </div>
+        <div>
+          <label>Category</label>
+          <input id="editCategory" required>
+        </div>
+        <div>
+          <label>Selling Price</label>
+          <input id="editPrice" type="number" step="0.01" required>
+        </div>
+        <div>
+          <label>Original Price</label>
+          <input id="editOriPrice" type="number" step="0.01">
+        </div>
+        <div>
+          <label>Stock</label>
+          <input id="editStock" type="number" min="0">
+        </div>
+        <div>
+          <label>Status</label>
+          <select id="editStatus">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="sold_out">Sold Out</option>
+            <option value="draft">Draft</option>
+          </select>
+        </div>
+        <div class="full">
+          <label>Image URL</label>
+          <input id="editImageUrl" placeholder="Current or external image URL">
+        </div>
+        <div class="full">
+          <label>Upload New Product Image</label>
+          <input id="editImageFile" type="file" accept="image/*">
+          <div class="upload-note">If you upload a new image, it will be saved to Firebase Storage and replace the Image URL automatically.</div>
+          <img id="editImagePreview" class="image-preview" alt="Product preview" style="display:none">
+        </div>
+        <div class="full">
+          <label>Description</label>
+          <textarea id="editDescription" placeholder="Product description"></textarea>
+        </div>
+      </div>
+
+      <button class="save" type="submit" id="saveProductChangesBtn">Save Changes</button>
+    </form>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
   getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBePIBUOZ9WApSG2MyXjOBzFRpDzH63NlI",
@@ -215,6 +292,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
 let products = [];
 let orders = [];
@@ -267,13 +345,17 @@ async function loadProducts(){
       <td>
         <strong>${p.name || "-"}</strong><br>
         <span class="small">${p.category || "-"}<br>Collection: ${p._collection}</span>
+        ${p.imageUrl ? `<img class="product-thumb" src="${p.imageUrl}" alt="${p.name || 'Product'}">` : ``}
       </td>
       <td>RM ${p.price || 0}<br><span class="small">Ori: RM ${p.oriPrice || "-"}</span></td>
       <td>${p.stock ?? "-"}</td>
       <td><span class="status">${p.status || "active"}</span></td>
       <td>
-        <button onclick="toggleStatus('${p.id}','${p.status || "active"}','${p._collection}')">Toggle Status</button>
-        <button class="danger" onclick="deleteProduct('${p.id}','${p._collection}')">Delete</button>
+        <div class="product-actions">
+          <button class="edit-btn" type="button" onclick="openEditProductModal('${p.id}')">Edit</button>
+          <button type="button" onclick="toggleStatus('${p.id}','${p.status || "active"}','${p._collection}')">Toggle Status</button>
+          <button class="danger" type="button" onclick="deleteProduct('${p.id}','${p._collection}')">Delete</button>
+        </div>
       </td>
     </tr>
   `).join("") : `<tr><td colspan="5">No products found. Pastikan collection <strong>Products</strong> ada document dan Rules sudah Publish.</td></tr>`;
@@ -660,33 +742,166 @@ function renderItems(items){
     return `${i.name || "Item"} × ${qty}<br><span class="small">${i.size || ""} ${i.color || ""} · RM ${subtotal.toFixed(2)}</span>`;
   }).join("<br><br>");
 }
+function sanitizeFileName(name){
+  return String(name || "image").toLowerCase().replace(/[^a-z0-9.]+/g, "-").replace(/-+/g, "-").slice(0, 80);
+}
+
+async function uploadProductImage(file, folderId="new-product"){
+  if (!file) return "";
+
+  if (!file.type.startsWith("image/")) {
+    throw new Error("Only image files are allowed.");
+  }
+
+  const maxSize = 5 * 1024 * 1024;
+  if (file.size > maxSize) {
+    throw new Error("Image file is too large. Maximum size is 5MB.");
+  }
+
+  const safeName = sanitizeFileName(file.name);
+  const path = `products/${folderId}/${Date.now()}-${safeName}`;
+  const imageRef = ref(storage, path);
+
+  await uploadBytes(imageRef, file, { contentType: file.type });
+  return await getDownloadURL(imageRef);
+}
+
 
 document.getElementById("productForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const product = {
-    name: document.getElementById("name").value,
-    category: document.getElementById("category").value,
-    price: Number(document.getElementById("price").value),
-    oriPrice: Number(document.getElementById("oriPrice").value || 0),
-    stock: Number(document.getElementById("stock").value || 0),
-    imageUrl: document.getElementById("imageUrl").value || "https://dummyimage.com/600x800/f8f1e9/3a271f&text=VELOURA",
-    description: document.getElementById("description").value,
-    status: "active",
-    sizes: ["XS","S","M","L","XL","2XL","3XL","4XL"],
-    colors: ["Rose","Cream","Ash Blue","Mocha","Black"],
-    createdAt: serverTimestamp()
-  };
+  const saveBtn = e.target.querySelector("button[type='submit']");
+  const originalText = saveBtn.textContent;
+  saveBtn.disabled = true;
+  saveBtn.textContent = "Saving...";
 
-  await addDoc(collection(db, "Products"), product);
-  e.target.reset();
-  await loadProducts();
-  alert("Product saved.");
+  try {
+    const file = document.getElementById("productImageFile")?.files?.[0];
+    const uploadedImageUrl = file ? await uploadProductImage(file, "new") : "";
+    const stockValue = Number(document.getElementById("stock").value || 0);
+
+    const product = {
+      name: document.getElementById("name").value.trim(),
+      category: document.getElementById("category").value.trim(),
+      price: Number(document.getElementById("price").value),
+      oriPrice: Number(document.getElementById("oriPrice").value || 0),
+      stock: stockValue,
+      imageUrl: uploadedImageUrl || document.getElementById("imageUrl").value.trim() || "https://dummyimage.com/600x800/f8f1e9/3a271f&text=VELOURA",
+      description: document.getElementById("description").value.trim(),
+      status: stockValue <= 0 ? "sold_out" : "active",
+      sizes: ["XS","S","M","L","XL","2XL","3XL","4XL"],
+      colors: ["Rose","Cream","Ash Blue","Mocha","Black"],
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
+
+    await addDoc(collection(db, "Products"), product);
+    e.target.reset();
+    await loadProducts();
+    alert("Product saved.");
+  } catch(error) {
+    console.error(error);
+    alert(error.message || "Failed to save product.");
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = originalText;
+  }
+});
+
+function findProductById(id){
+  return products.find(p => p.id === id);
+}
+
+window.openEditProductModal = function(id){
+  const product = findProductById(id);
+  if (!product) {
+    alert("Product not found.");
+    return;
+  }
+
+  document.getElementById("editProductId").value = product.id;
+  document.getElementById("editProductCollection").value = product._collection || "Products";
+  document.getElementById("editName").value = product.name || "";
+  document.getElementById("editCategory").value = product.category || "";
+  document.getElementById("editPrice").value = product.price ?? "";
+  document.getElementById("editOriPrice").value = product.oriPrice ?? "";
+  document.getElementById("editStock").value = product.stock ?? 0;
+  document.getElementById("editStatus").value = product.status || "active";
+  document.getElementById("editImageUrl").value = product.imageUrl || "";
+  document.getElementById("editDescription").value = product.description || "";
+  document.getElementById("editImageFile").value = "";
+
+  const preview = document.getElementById("editImagePreview");
+  if (product.imageUrl) {
+    preview.src = product.imageUrl;
+    preview.style.display = "block";
+  } else {
+    preview.removeAttribute("src");
+    preview.style.display = "none";
+  }
+
+  document.getElementById("editProductModal").classList.add("active");
+  document.getElementById("editProductModal").setAttribute("aria-hidden", "false");
+};
+
+window.closeEditProductModal = function(){
+  document.getElementById("editProductModal").classList.remove("active");
+  document.getElementById("editProductModal").setAttribute("aria-hidden", "true");
+};
+
+document.getElementById("editImageFile").addEventListener("change", (event) => {
+  const file = event.target.files?.[0];
+  const preview = document.getElementById("editImagePreview");
+  if (!file) return;
+  preview.src = URL.createObjectURL(file);
+  preview.style.display = "block";
+});
+
+document.getElementById("editProductForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const id = document.getElementById("editProductId").value;
+  const collectionName = document.getElementById("editProductCollection").value || "Products";
+  const saveBtn = document.getElementById("saveProductChangesBtn");
+  const originalText = saveBtn.textContent;
+
+  saveBtn.disabled = true;
+  saveBtn.textContent = "Saving...";
+
+  try {
+    const file = document.getElementById("editImageFile")?.files?.[0];
+    const uploadedImageUrl = file ? await uploadProductImage(file, id) : "";
+    const stockValue = Number(document.getElementById("editStock").value || 0);
+    const selectedStatus = document.getElementById("editStatus").value || "active";
+
+    const updateData = {
+      name: document.getElementById("editName").value.trim(),
+      category: document.getElementById("editCategory").value.trim(),
+      price: Number(document.getElementById("editPrice").value || 0),
+      oriPrice: Number(document.getElementById("editOriPrice").value || 0),
+      stock: stockValue,
+      status: stockValue <= 0 ? "sold_out" : selectedStatus,
+      imageUrl: uploadedImageUrl || document.getElementById("editImageUrl").value.trim(),
+      description: document.getElementById("editDescription").value.trim(),
+      updatedAt: serverTimestamp()
+    };
+
+    await updateDoc(doc(db, collectionName, id), updateData);
+    await loadProducts();
+    closeEditProductModal();
+    alert("Product updated successfully.");
+  } catch(error) {
+    console.error(error);
+    alert(error.message || "Failed to update product.");
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = originalText;
+  }
 });
 
 window.toggleStatus = async function(id, status, collectionName='Products'){
   const newStatus = status === "active" ? "inactive" : "active";
-  await updateDoc(doc(db, collectionName, id), { status: newStatus });
+  await updateDoc(doc(db, collectionName, id), { status: newStatus, updatedAt: serverTimestamp() });
   await loadProducts();
 };
 
