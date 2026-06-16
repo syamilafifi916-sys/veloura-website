@@ -1,110 +1,839 @@
 <!DOCTYPE html>
 <html lang="ms">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Veloura Admin</title>
-<style>
-body{font-family:Arial,sans-serif;margin:0;background:#FFFBF7;color:#2C1810}.wrap{max-width:1180px;margin:auto;padding:28px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center}.card{background:#fff;border:1px solid #E8DED2;border-radius:16px;padding:18px;margin:16px 0;box-shadow:0 8px 30px rgba(44,24,16,.08)}input,select,button{padding:12px;border-radius:10px;border:1px solid #E8DED2}button{background:#8B5A2B;color:#fff;cursor:pointer}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.stat strong{font-size:28px;display:block}table{width:100%;border-collapse:collapse;background:#fff;border-radius:16px;overflow:hidden}th,td{padding:12px;border-bottom:1px solid #E8DED2;text-align:left;font-size:14px}.login{max-width:420px;margin:10vh auto}.hidden{display:none}.actions{display:flex;gap:8px;flex-wrap:wrap}@media(max-width:800px){.grid{grid-template-columns:1fr 1fr}table{font-size:12px}.wrap{padding:16px}}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Veloura Admin Dashboard</title>
+  <style>
+    body{margin:0;font-family:Arial,sans-serif;background:#FFF7EA;color:#ED337F}
+    header{background:#ED337F;color:white;padding:18px 24px;display:flex;justify-content:space-between;align-items:center}
+    header h1{margin:0;letter-spacing:4px;font-size:22px}
+    button{border:none;border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:700}
+    .logout{background:#ED337F;color:#ED337F}
+    main{max-width:1200px;margin:auto;padding:28px 18px}
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}.analytics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+    .card{background:white;border:1px solid #F4D7E5;border-radius:16px;padding:18px;box-shadow:0 8px 30px rgba(44,24,16,.08)}
+    .card h3{margin:0 0 6px;color:#ED337F}
+    .card strong{font-size:28px}
+    .section{background:white;border:1px solid #F4D7E5;border-radius:16px;padding:20px;margin-bottom:24px}
+    h2{margin:0 0 16px}
+    input,select,textarea{width:100%;padding:12px;border:1px solid #F4D7E5;border-radius:10px;box-sizing:border-box}
+    .form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .form-grid textarea{grid-column:1/-1}
+    .save{background:#ED337F;color:white;margin-top:12px}
+    table{width:100%;border-collapse:collapse;font-size:14px}
+    th,td{padding:12px;border-bottom:1px solid #F4D7E5;text-align:left;vertical-align:top}
+    th{color:#ED337F}
+    .status{padding:6px 10px;border-radius:999px;background:#FFF1F7;display:inline-block}
+    .status-paid{background:#e8f7ec;color:#1b7f3a}
+    .status-unpaid{background:#fff3cd;color:#7a4b00}
+    .danger{background:#C44536;color:white}
+    .success{background:#2e7d32;color:white}
+    .secondary{background:#FFF1F7;color:#ED337F}
+    .small{font-size:12px;color:#8C7C6C}
+    .order-actions{display:grid;gap:8px;min-width:180px}
+    .order-actions button{width:100%} button:disabled{opacity:.45;cursor:not-allowed}.unpaid-warning{margin-top:10px;padding:10px;border-radius:10px;background:#fff3cd;color:#7a4b00;font-size:12px;font-weight:700;line-height:1.4}
+    .tracking-box{display:grid;gap:8px;margin-top:8px}
+    .address-box{margin-top:10px;padding:10px;background:#FFF1F7;border-radius:8px;font-size:12px;line-height:1.5;color:#5A4A3A}
+    .copy-address{margin-top:8px;width:100%;background:#FFF1F7;color:#ED337F}
+    .filters{display:grid;grid-template-columns:1.4fr 180px 180px 180px 140px 160px;gap:12px;margin-bottom:16px;align-items:end}
+    .orders-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 0 16px}
+    .orders-info{font-size:13px;color:#8C7C6C;font-weight:700}
+    .pagination{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .pagination button{background:#FFF1F7;color:#ED337F}
+    .pagination button:disabled{opacity:.45;cursor:not-allowed}
+    .delete-order{background:#7a1f1f;color:white}
+    @media(max-width:1000px){.filters{grid-template-columns:1fr 1fr 1fr}}
+    @media(max-width:800px){.filters{grid-template-columns:1fr}.orders-toolbar{align-items:flex-start;flex-direction:column}}
+    .notice{background:#fff3cd;border:1px solid #ffe08a;color:#5c3a1e;border-radius:12px;padding:12px;margin-bottom:16px;display:none}
+
+    .section-header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+    .section-header h2{margin:0}
+    .subscriber-actions{display:flex;gap:10px;flex-wrap:wrap}
+    .subscriber-search{max-width:360px;margin-bottom:14px}
+    @media(max-width:800px){.grid,.analytics-grid,.form-grid{grid-template-columns:1fr}table{font-size:12px}}
+  </style>
 </head>
+
 <body>
-<div id="loginBox" class="login card">
-  <h1>Veloura Admin</h1>
-  <p>Login admin untuk urus order.</p>
-  <input id="email" type="email" placeholder="Admin email" style="width:100%;box-sizing:border-box;margin-bottom:10px">
-  <input id="password" type="password" placeholder="Password" style="width:100%;box-sizing:border-box;margin-bottom:10px">
-  <button id="loginBtn" style="width:100%">Login</button>
-</div>
+<header>
+  <h1>VELOURA ADMIN</h1>
+  <button class="logout" id="logoutBtn">Logout</button>
+</header>
 
-<div id="app" class="wrap hidden">
-  <div class="top">
-    <div><h1>Veloura Admin Dashboard</h1><p>Order, payment dan production status.</p></div>
-    <button id="logoutBtn">Logout</button>
-  </div>
-
+<main>
+  <div class="notice" id="adminNotice"></div>
   <div class="grid">
-    <div class="card stat"><span>Total Orders</span><strong id="totalOrders">0</strong></div>
-    <div class="card stat"><span>Paid</span><strong id="paidOrders">0</strong></div>
-    <div class="card stat"><span>Pending</span><strong id="pendingOrders">0</strong></div>
-    <div class="card stat"><span>Revenue</span><strong>RM <span id="revenue">0</span></strong></div>
+    <div class="card"><h3>Total Products</h3><strong id="totalProducts">0</strong></div>
+    <div class="card"><h3>Total Orders</h3><strong id="totalOrders">0</strong></div>
+    <div class="card"><h3>Paid Orders</h3><strong id="paidOrders">0</strong></div>
+    <div class="card"><h3>Subscribers</h3><strong id="totalSubscribers">0</strong></div>
   </div>
 
-  <div class="card">
-    <input id="search" placeholder="Search nama / phone / order no" style="width:100%;box-sizing:border-box">
+  <div class="analytics-grid">
+    <div class="card"><h3>Revenue Today</h3><strong id="revenueToday">RM 0</strong></div>
+    <div class="card"><h3>Revenue This Month</h3><strong id="revenueMonth">RM 0</strong></div>
+    <div class="card"><h3>Pending Payment</h3><strong id="pendingPayment">0</strong></div>
+    <div class="card"><h3>Processing</h3><strong id="processingOrders">0</strong></div>
+    <div class="card"><h3>Shipped</h3><strong id="shippedOrders">0</strong></div>
+    <div class="card"><h3>Delivered</h3><strong id="deliveredOrders">0</strong></div>
   </div>
 
-  <div class="card">
+  <div class="section">
+    <h2>Add Product</h2>
+    <form id="productForm">
+      <div class="form-grid">
+        <input id="name" placeholder="Product Name" required />
+        <input id="category" placeholder="Category" required />
+        <input id="price" type="number" placeholder="Sale Price" required />
+        <input id="oriPrice" type="number" placeholder="Original Price" />
+        <input id="stock" type="number" placeholder="Stock" />
+        <input id="imageUrl" placeholder="Image URL" />
+        <textarea id="description" placeholder="Description"></textarea>
+      </div>
+      <button class="save" type="submit">Save Product</button>
+    </form>
+  </div>
+
+  <div class="section">
+    <h2>Products</h2>
     <table>
-      <thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Status</th><th>Updated</th><th>Action</th></tr></thead>
-      <tbody id="ordersBody"></tbody>
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Price</th>
+          <th>Stock</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="productsTable"></tbody>
     </table>
   </div>
-</div>
+
+
+  <div class="section">
+    <div class="section-header">
+      <h2>Subscribers</h2>
+      <div class="subscriber-actions">
+        <button class="secondary" type="button" id="refreshSubscribersBtn">Refresh Subscribers</button>
+        <button class="save" type="button" id="exportSubscribersBtn" style="margin-top:0">Export CSV</button>
+      </div>
+    </div>
+    <input class="subscriber-search" id="subscriberSearch" placeholder="Search subscriber email">
+    <table>
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Source</th>
+          <th>Status</th>
+          <th>Date Joined</th>
+        </tr>
+      </thead>
+      <tbody id="subscribersTable"></tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Orders</h2>
+    <div class="filters">
+      <input id="orderSearch" placeholder="Search order, customer, email or phone">
+      <select id="orderStatusFilter">
+        <option value="">All Status</option>
+        <option value="pending">Pending</option>
+        <option value="pending_payment">Pending Payment</option>
+        <option value="paid">Paid</option>
+        <option value="unpaid">Unpaid</option>
+        <option value="processing">Processing</option>
+        <option value="shipped">Shipped</option>
+        <option value="delivered">Delivered</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+      <select id="orderDateFilter">
+        <option value="all">All Time</option>
+        <option value="today">Today</option>
+        <option value="week">This Week</option>
+        <option value="month">This Month</option>
+        <option value="year">This Year</option>
+      </select>
+      <select id="orderSortBy">
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+        <option value="highest">Highest Total</option>
+        <option value="lowest">Lowest Total</option>
+        <option value="unpaid_first">Unpaid First</option>
+        <option value="paid_first">Paid First</option>
+      </select>
+      <select id="ordersPerPage">
+        <option value="10">Show 10</option>
+        <option value="25" selected>Show 25</option>
+        <option value="50">Show 50</option>
+        <option value="100">Show 100</option>
+      </select>
+      <button class="secondary" type="button" id="refreshOrdersBtn">Refresh Orders</button>
+    </div>
+    <div class="orders-toolbar">
+      <div class="orders-info" id="ordersInfo">Showing 0 orders</div>
+      <div class="pagination">
+        <button type="button" id="prevOrdersPage">Previous</button>
+        <span class="orders-info" id="ordersPageInfo">Page 1 of 1</span>
+        <button type="button" id="nextOrdersPage">Next</button>
+      </div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Order / Customer</th>
+          <th>Items</th>
+          <th>Total</th>
+          <th>Payment</th>
+          <th>Status & Shipping</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="ordersTable"></tbody>
+    </table>
+  </div>
+</main>
 
 <script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
-import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
-import { firebaseConfig } from '../js/firebase-config.js';
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import {
+  getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBePIBUOZ9WApSG2MyXjOBzFRpDzH63NlI",
+  authDomain: "veloura-b86d8.firebaseapp.com",
+  projectId: "veloura-b86d8",
+  storageBucket: "veloura-b86d8.firebasestorage.app",
+  messagingSenderId: "425278142821",
+  appId: "1:425278142821:web:59861b129be1bd648c098c"
+};
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-let allOrders = [];
 
-const $ = id => document.getElementById(id);
-$('loginBtn').onclick = async () => {
-  try { await signInWithEmailAndPassword(auth, $('email').value, $('password').value); }
-  catch(e){ alert(e.message); }
-};
-$('logoutBtn').onclick = () => signOut(auth);
-$('search').oninput = renderOrders;
+let products = [];
+let orders = [];
+let subscribers = [];
+let currentOrdersPage = 1;
 
-onAuthStateChanged(auth, user => {
-  $('loginBox').classList.toggle('hidden', !!user);
-  $('app').classList.toggle('hidden', !user);
-  if (user) listenOrders();
+onAuthStateChanged(auth, (user) => {
+  if (!user) window.location.href = "admin-login.html";
+  else init();
 });
 
-function listenOrders(){
-  const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
-  onSnapshot(q, snap => {
-    allOrders = snap.docs.map(d => ({ id:d.id, ...d.data() }));
-    renderOrders();
-  });
+document.getElementById("logoutBtn").onclick = async () => {
+  await signOut(auth);
+  window.location.href = "admin-login.html";
+};
+
+async function init(){
+  await loadProducts();
+  await loadOrders();
+  await loadSubscribers();
 }
 
-function renderOrders(){
-  const term = ($('search').value || '').toLowerCase();
-  const filtered = allOrders.filter(o => JSON.stringify(o).toLowerCase().includes(term));
-  $('totalOrders').textContent = allOrders.length;
-  $('paidOrders').textContent = allOrders.filter(o => o.status === 'paid').length;
-  $('pendingOrders').textContent = allOrders.filter(o => o.status === 'pending_payment').length;
-  $('revenue').textContent = allOrders.filter(o => o.status === 'paid').reduce((s,o)=>s+Number(o.total||0),0).toFixed(2);
+function showNotice(message){
+  const el = document.getElementById("adminNotice");
+  el.style.display = "block";
+  el.innerHTML = message;
+}
 
-  $('ordersBody').innerHTML = filtered.map(o => `
+async function readCollections(names){
+  const all = [];
+  for (const name of names){
+    try{
+      const snap = await getDocs(collection(db, name));
+      snap.docs.forEach(d => all.push({ id:d.id, _collection:name, ...d.data() }));
+    }catch(error){
+      console.error(`Failed to read ${name}:`, error);
+      showNotice(`Tidak boleh baca collection <strong>${name}</strong>. Semak Firestore Rules dan pastikan sudah Publish.`);
+    }
+  }
+  return all;
+}
+
+async function loadProducts(){
+  products = await readCollections(["Products", "products"]);
+
+  document.getElementById("totalProducts").textContent = products.length;
+
+  document.getElementById("productsTable").innerHTML = products.length ? products.map(p => `
     <tr>
-      <td><strong>${o.orderNo || o.id}</strong><br><small>${o.gatewayRef || ''}</small></td>
-      <td>${o.customer?.name || '-'}<br><small>${o.customer?.phone || ''}</small></td>
-      <td>RM ${Number(o.total || 0).toFixed(2)}</td>
       <td>
-        <select data-id="${o.id}" class="statusSelect">
-          ${['pending_payment','paid','in_production','ready_to_ship','shipped','completed','cancelled','failed'].map(s => `<option value="${s}" ${o.status===s?'selected':''}>${s}</option>`).join('')}
-        </select>
+        <strong>${p.name || "-"}</strong><br>
+        <span class="small">${p.category || "-"}<br>Collection: ${p._collection}</span>
       </td>
-      <td><small>${o.updatedAt || o.createdAt || ''}</small></td>
-      <td><button data-id="${o.id}" class="viewBtn">View</button></td>
-    </tr>`).join('');
-
-  document.querySelectorAll('.statusSelect').forEach(el => el.onchange = async e => {
-    await updateDoc(doc(db,'orders', e.target.dataset.id), { status:e.target.value, updatedAt:new Date().toISOString() });
-  });
-  document.querySelectorAll('.viewBtn').forEach(btn => btn.onclick = () => {
-    const o = allOrders.find(x => x.id === btn.dataset.id);
-    alert(JSON.stringify(o, null, 2));
-  });
+      <td>RM ${p.price || 0}<br><span class="small">Ori: RM ${p.oriPrice || "-"}</span></td>
+      <td>${p.stock ?? "-"}</td>
+      <td><span class="status">${p.status || "active"}</span></td>
+      <td>
+        <button onclick="toggleStatus('${p.id}','${p.status || "active"}','${p._collection}')">Toggle Status</button>
+        <button class="danger" onclick="deleteProduct('${p.id}','${p._collection}')">Delete</button>
+      </td>
+    </tr>
+  `).join("") : `<tr><td colspan="5">No products found. Pastikan collection <strong>Products</strong> ada document dan Rules sudah Publish.</td></tr>`;
 }
+
+
+function toDate(value){
+  if (!value) return null;
+  if (typeof value.toDate === "function") return value.toDate();
+  if (typeof value === "string") {
+    const d = new Date(value);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  if (value.seconds) return new Date(value.seconds * 1000);
+  return null;
+}
+
+function getOrderDate(o){
+  return toDate(o.createdAt || o.paidAt || o.updatedAt);
+}
+
+function startOfWeek(date){
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  d.setDate(diff);
+  d.setHours(0,0,0,0);
+  return d;
+}
+
+function matchesDateFilter(o, filter){
+  if (!filter || filter === "all") return true;
+  const d = getOrderDate(o);
+  if (!d) return false;
+
+  const now = new Date();
+  if (filter === "today") return isSameDay(d, now);
+  if (filter === "week") return d >= startOfWeek(now) && d <= now;
+  if (filter === "month") return isSameMonth(d, now);
+  if (filter === "year") return d.getFullYear() === now.getFullYear();
+  return true;
+}
+
+function resetOrdersPage(){
+  currentOrdersPage = 1;
+  renderOrdersTable();
+}
+
+function isSameDay(a,b){
+  return a && b &&
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
+}
+
+function isSameMonth(a,b){
+  return a && b &&
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth();
+}
+
+function orderAmount(o){
+  return Number(o.totalAmount || o.total || 0);
+}
+
+function isPaidOrder(o){
+  return String(o.paymentStatus || "").toLowerCase() === "paid";
+}
+
+function updateAnalytics(){
+  const now = new Date();
+  const paidOrders = orders.filter(isPaidOrder);
+
+  const revenueToday = paidOrders
+    .filter(o => isSameDay(toDate(o.paidAt || o.createdAt), now))
+    .reduce((sum,o) => sum + orderAmount(o), 0);
+
+  const revenueMonth = paidOrders
+    .filter(o => isSameMonth(toDate(o.paidAt || o.createdAt), now))
+    .reduce((sum,o) => sum + orderAmount(o), 0);
+
+  const pendingPayment = orders.filter(o =>
+    String(o.paymentStatus || "unpaid").toLowerCase() !== "paid"
+  ).length;
+
+  const processing = orders.filter(o => (o.status || "") === "processing").length;
+  const shipped = orders.filter(o => (o.status || "") === "shipped").length;
+  const delivered = orders.filter(o => ["delivered","completed"].includes(o.status || "")).length;
+
+  document.getElementById("revenueToday").textContent = `RM ${revenueToday.toFixed(2)}`;
+  document.getElementById("revenueMonth").textContent = `RM ${revenueMonth.toFixed(2)}`;
+  document.getElementById("pendingPayment").textContent = pendingPayment;
+  document.getElementById("processingOrders").textContent = processing;
+  document.getElementById("shippedOrders").textContent = shipped;
+  document.getElementById("deliveredOrders").textContent = delivered;
+}
+
+
+async function loadSubscribers(){
+  subscribers = await readCollections(["Subscribers", "subscribers"]);
+
+  const totalEl = document.getElementById("totalSubscribers");
+  if (totalEl) totalEl.textContent = subscribers.length;
+
+  renderSubscribersTable();
+}
+
+function subscriberDate(value){
+  const d = toDate(value);
+  return d ? d.toLocaleString("en-MY") : "-";
+}
+
+function renderSubscribersTable(){
+  const search = (document.getElementById("subscriberSearch")?.value || "").toLowerCase().trim();
+
+  let filtered = subscribers.filter(s => {
+    const haystack = [s.email, s.source, s.status].join(" ").toLowerCase();
+    return !search || haystack.includes(search);
+  });
+
+  filtered.sort((a,b) => {
+    const da = toDate(a.createdAt)?.getTime() || 0;
+    const db = toDate(b.createdAt)?.getTime() || 0;
+    return db - da;
+  });
+
+  document.getElementById("subscribersTable").innerHTML = filtered.length ? filtered.map(s => `
+    <tr>
+      <td><strong>${s.email || "-"}</strong><br><span class="small">Collection: ${s._collection}</span></td>
+      <td>${s.source || "-"}</td>
+      <td><span class="status">${s.status || "active"}</span></td>
+      <td>${subscriberDate(s.createdAt)}</td>
+    </tr>
+  `).join("") : `<tr><td colspan="4">No subscribers found.</td></tr>`;
+}
+
+function exportSubscribersCSV(){
+  if (!subscribers.length) {
+    alert("No subscribers to export.");
+    return;
+  }
+
+  const rows = [
+    ["Email", "Source", "Status", "Date Joined"],
+    ...subscribers.map(s => [
+      s.email || "",
+      s.source || "",
+      s.status || "active",
+      subscriberDate(s.createdAt)
+    ])
+  ];
+
+  const csv = rows.map(row => row.map(cell => `"${String(cell).replaceAll('"','""')}"`).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = "veloura-subscribers.csv";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+
+async function loadOrders(){
+  orders = await readCollections(["Orders", "orders"]);
+
+  document.getElementById("totalOrders").textContent = orders.length;
+  document.getElementById("paidOrders").textContent = orders.filter(o => (o.paymentStatus || "").toLowerCase() === "paid").length;
+
+  updateAnalytics();
+  renderOrdersTable();
+}
+
+function renderOrdersTable(){
+  const search = (document.getElementById("orderSearch")?.value || "").toLowerCase().trim();
+  const statusFilter = document.getElementById("orderStatusFilter")?.value || "";
+  const dateFilter = document.getElementById("orderDateFilter")?.value || "all";
+  const sortBy = document.getElementById("orderSortBy")?.value || "newest";
+  const perPage = Number(document.getElementById("ordersPerPage")?.value || 25);
+
+  let filtered = orders.filter(o => {
+    const paymentStatus = String(o.paymentStatus || (o.status === "paid" ? "paid" : "unpaid")).toLowerCase();
+    const orderStatus = String(o.status || "pending").toLowerCase();
+
+    const haystack = [
+      o.orderNumber,
+      o.orderNo,
+      o.customerName,
+      o.email,
+      o.phone,
+      o.status,
+      o.paymentStatus
+    ].join(" ").toLowerCase();
+
+    const matchSearch = !search || haystack.includes(search);
+    const matchDate = matchesDateFilter(o, dateFilter);
+
+    let matchStatus = true;
+    if (statusFilter === "paid") matchStatus = paymentStatus === "paid";
+    else if (statusFilter === "unpaid") matchStatus = paymentStatus !== "paid";
+    else if (statusFilter) matchStatus = orderStatus === statusFilter;
+
+    return matchSearch && matchStatus && matchDate;
+  });
+
+  filtered.sort((a,b) => {
+    const da = getOrderDate(a)?.getTime() || 0;
+    const db = getOrderDate(b)?.getTime() || 0;
+    const aa = orderAmount(a);
+    const ba = orderAmount(b);
+    const ap = isPaidOrder(a) ? 1 : 0;
+    const bp = isPaidOrder(b) ? 1 : 0;
+
+    if (sortBy === "oldest") return da - db;
+    if (sortBy === "highest") return ba - aa;
+    if (sortBy === "lowest") return aa - ba;
+    if (sortBy === "unpaid_first") return ap - bp || db - da;
+    if (sortBy === "paid_first") return bp - ap || db - da;
+    return db - da;
+  });
+
+  const totalFiltered = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / perPage));
+  if (currentOrdersPage > totalPages) currentOrdersPage = totalPages;
+
+  const startIndex = (currentOrdersPage - 1) * perPage;
+  const endIndex = startIndex + perPage;
+  const pageOrders = filtered.slice(startIndex, endIndex);
+
+  const ordersInfo = document.getElementById("ordersInfo");
+  const ordersPageInfo = document.getElementById("ordersPageInfo");
+  const prevBtn = document.getElementById("prevOrdersPage");
+  const nextBtn = document.getElementById("nextOrdersPage");
+
+  if (ordersInfo) {
+    ordersInfo.textContent = totalFiltered
+      ? `Showing ${startIndex + 1}-${Math.min(endIndex, totalFiltered)} of ${totalFiltered} orders`
+      : "Showing 0 orders";
+  }
+  if (ordersPageInfo) ordersPageInfo.textContent = `Page ${currentOrdersPage} of ${totalPages}`;
+  if (prevBtn) prevBtn.disabled = currentOrdersPage <= 1;
+  if (nextBtn) nextBtn.disabled = currentOrdersPage >= totalPages;
+
+  document.getElementById("ordersTable").innerHTML = pageOrders.length ? pageOrders.map(o => {
+    const orderNo = o.orderNumber || o.orderNo || o.id;
+    const paymentStatus = o.paymentStatus || (o.status === "paid" ? "paid" : "unpaid");
+    const orderStatus = o.status || "pending";
+    const total = Number(o.totalAmount || o.total || 0).toFixed(2);
+    const courier = o.courier || "";
+    const trackingNumber = o.trackingNumber || "";
+    const isPaid = String(paymentStatus).toLowerCase() === "paid";
+    const canDelete = !isPaid || orderStatus === "cancelled";
+    const fulfilmentDisabled = isPaid ? "" : "disabled";
+    const unpaidWarning = isPaid ? "" : `
+      <div class="unpaid-warning">
+        ⚠ UNPAID ORDER<br>
+        Do not fulfil until payment is confirmed.
+      </div>
+    `;
+
+    return `
+    <tr>
+      <td>
+        <strong>${orderNo}</strong><br>
+        <span class="small">
+          ${o.customerName || o.customer?.name || "Customer"}<br>
+          ${o.email || o.customer?.email || ""}<br>
+          ${o.phone || o.customer?.phone || ""}
+        </span>
+
+        <div class="address-box">
+          <strong>Shipping Address</strong><br>
+          ${renderAddress(o)}
+        </div>
+
+        <button
+          type="button"
+          class="copy-address"
+          onclick="copyAddress('${o.id}')"
+        >
+          Copy Address
+        </button>
+
+        <span class="small">Collection: ${o._collection}</span>
+      </td>
+      <td>${renderItems(o.items)}</td>
+      <td>RM ${total}</td>
+      <td>
+        <span class="status ${paymentStatus === "paid" ? "status-paid" : "status-unpaid"}">${paymentStatus}</span><br>
+        <span class="small">${o.paymentMethod || o.paymentGateway || "bayarcash"}</span>
+      </td>
+      <td>
+        ${unpaidWarning}
+        <select onchange="updateOrderStatus('${o.id}', this.value, '${o._collection}')">
+          ${["pending","pending_payment","paid","processing","shipped","delivered","cancelled"].map(st => {
+            const fulfilmentStatus = ["processing","shipped","delivered"].includes(st);
+            const disabled = !isPaid && fulfilmentStatus ? "disabled" : "";
+            return `<option value="${st}" ${orderStatus === st ? "selected" : ""} ${disabled}>${st}</option>`;
+          }).join("")}
+        </select>
+        <div class="tracking-box">
+          <input id="courier-${o.id}" placeholder="Courier e.g. J&T" value="${courier}" ${fulfilmentDisabled}>
+          <input id="tracking-${o.id}" placeholder="Tracking number" value="${trackingNumber}" ${fulfilmentDisabled}>
+          <button type="button" class="secondary" ${fulfilmentDisabled} onclick="saveTracking('${o.id}','${o._collection}')">Save Tracking</button>
+        </div>
+      </td>
+      <td>
+        <div class="order-actions">
+          <button class="success" type="button" onclick="markPaid('${o.id}','${o._collection}')">${isPaid ? "Paid" : "Mark Paid"}</button>
+          <button type="button" ${fulfilmentDisabled} onclick="quickStatus('${o.id}','processing','${o._collection}')">Processing</button>
+          <button type="button" ${fulfilmentDisabled} onclick="quickStatus('${o.id}','shipped','${o._collection}')">Shipped</button>
+          <button type="button" ${fulfilmentDisabled} onclick="quickStatus('${o.id}','delivered','${o._collection}')">Delivered</button>
+          <button class="danger" type="button" onclick="quickStatus('${o.id}','cancelled','${o._collection}')">Cancel</button>
+          ${canDelete ? `<button class="delete-order" type="button" onclick="deleteOrder('${o.id}','${o._collection}')">Delete</button>` : ``}
+        </div>
+      </td>
+    </tr>`;
+  }).join("") : `<tr><td colspan="6">No orders found.</td></tr>`;
+}
+
+function getCustomerName(o){
+  return o.customerName || o.customer?.name || "Customer";
+}
+
+function getCustomerPhone(o){
+  return o.phone || o.customer?.phone || "";
+}
+
+function getCustomerEmail(o){
+  return o.email || o.customer?.email || "";
+}
+
+function getAddressParts(o){
+  const shipping = o.shippingAddress || o.shipping || o.customer?.shippingAddress || {};
+
+  return {
+    address: o.address || shipping.address || shipping.line1 || "",
+    address2: o.address2 || shipping.address2 || shipping.line2 || "",
+    postcode: o.postcode || shipping.postcode || shipping.postalCode || "",
+    city: o.city || shipping.city || "",
+    state: o.state || shipping.state || "",
+    country: o.country || shipping.country || "Malaysia"
+  };
+}
+
+function renderAddress(o){
+  const a = getAddressParts(o);
+
+  const lines = [
+    a.address,
+    a.address2,
+    `${a.postcode} ${a.city}`.trim(),
+    a.state,
+    a.country
+  ].filter(Boolean);
+
+  return lines.length ? lines.join("<br>") : `<span class="small">No address found</span>`;
+}
+
+function buildAddressText(o){
+  const a = getAddressParts(o);
+  return [
+    getCustomerName(o),
+    getCustomerPhone(o),
+    getCustomerEmail(o),
+    "",
+    a.address,
+    a.address2,
+    `${a.postcode} ${a.city}`.trim(),
+    a.state,
+    a.country
+  ].filter(line => line !== undefined && line !== null).join("\\n").trim();
+}
+
+function renderItems(items){
+  if (!items || !Array.isArray(items)) return "-";
+  return items.map(i => {
+    const qty = Number(i.qty || i.quantity || 1);
+    const price = Number(i.price || i.unitPrice || 0);
+    const subtotal = Number(i.subtotal || (price * qty));
+    return `${i.name || "Item"} × ${qty}<br><span class="small">${i.size || ""} ${i.color || ""} · RM ${subtotal.toFixed(2)}</span>`;
+  }).join("<br><br>");
+}
+
+document.getElementById("productForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const product = {
+    name: document.getElementById("name").value,
+    category: document.getElementById("category").value,
+    price: Number(document.getElementById("price").value),
+    oriPrice: Number(document.getElementById("oriPrice").value || 0),
+    stock: Number(document.getElementById("stock").value || 0),
+    imageUrl: document.getElementById("imageUrl").value || "https://dummyimage.com/600x800/f8f1e9/3a271f&text=VELOURA",
+    description: document.getElementById("description").value,
+    status: "active",
+    sizes: ["XS","S","M","L","XL","2XL","3XL","4XL"],
+    colors: ["Rose","Cream","Ash Blue","Mocha","Black"],
+    createdAt: serverTimestamp()
+  };
+
+  await addDoc(collection(db, "Products"), product);
+  e.target.reset();
+  await loadProducts();
+  alert("Product saved.");
+});
+
+window.toggleStatus = async function(id, status, collectionName='Products'){
+  const newStatus = status === "active" ? "inactive" : "active";
+  await updateDoc(doc(db, collectionName, id), { status: newStatus });
+  await loadProducts();
+};
+
+window.deleteProduct = async function(id, collectionName='Products'){
+  if (!confirm("Delete product ini?")) return;
+  await deleteDoc(doc(db, collectionName, id));
+  await loadProducts();
+};
+
+
+window.copyAddress = async function(id){
+  const order = orders.find(o => o.id === id);
+  if (!order) {
+    alert("Order not found.");
+    return;
+  }
+
+  const text = buildAddressText(order);
+
+  try {
+    await navigator.clipboard.writeText(text);
+    alert("Address copied.");
+  } catch (error) {
+    console.error(error);
+    prompt("Copy address manually:", text);
+  }
+};
+
+function findOrderById(id){
+  return orders.find(o => o.id === id);
+}
+
+function isOrderPaid(id){
+  const order = findOrderById(id);
+  return String(order?.paymentStatus || "").toLowerCase() === "paid";
+}
+
+window.updateOrderStatus = async function(id, status, collectionName='Orders'){
+  if (["processing","shipped","delivered"].includes(status) && !isOrderPaid(id)) {
+    alert("Order belum dibayar. Jangan fulfil order sehingga paymentStatus = paid.");
+    await loadOrders();
+    return;
+  }
+
+  const updateData = { status, updatedAt: serverTimestamp() };
+
+  if (status === "paid") {
+    updateData.paymentStatus = "paid";
+    updateData.paidAt = serverTimestamp();
+  }
+
+  if (status === "cancelled") {
+    updateData.cancelledAt = serverTimestamp();
+  }
+
+  if (status === "shipped") {
+    updateData.shippedAt = serverTimestamp();
+  }
+
+  if (status === "delivered") {
+    updateData.deliveredAt = serverTimestamp();
+  }
+
+  await updateDoc(doc(db, collectionName, id), updateData);
+  await loadOrders();
+};
+
+window.markPaid = async function(id, collectionName='Orders'){
+  await updateDoc(doc(db, collectionName, id), {
+    paymentStatus: "paid",
+    status: "paid",
+    paidAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  });
+  await loadOrders();
+};
+
+window.quickStatus = async function(id, status, collectionName='Orders'){
+  await updateOrderStatus(id, status, collectionName);
+};
+
+window.saveTracking = async function(id, collectionName='Orders'){
+  if (!isOrderPaid(id)) {
+    alert("Order belum dibayar. Tracking tidak boleh disimpan sehingga paymentStatus = paid.");
+    return;
+  }
+
+  const courier = document.getElementById(`courier-${id}`).value.trim();
+  const trackingNumber = document.getElementById(`tracking-${id}`).value.trim();
+
+  await updateDoc(doc(db, collectionName, id), {
+    courier,
+    trackingNumber,
+    status: trackingNumber ? "shipped" : "processing",
+    shippedAt: trackingNumber ? serverTimestamp() : null,
+    updatedAt: serverTimestamp()
+  });
+
+  await loadOrders();
+};
+
+
+window.deleteOrder = async function(id, collectionName='Orders'){
+  const order = findOrderById(id);
+
+  if (!order) {
+    alert("Order not found.");
+    return;
+  }
+
+  const isPaid = String(order.paymentStatus || "").toLowerCase() === "paid";
+  const orderStatus = String(order.status || "pending").toLowerCase();
+
+  if (isPaid && orderStatus !== "cancelled") {
+    alert("Paid orders cannot be deleted unless they are cancelled first.");
+    return;
+  }
+
+  const orderNo = order.orderNumber || order.orderNo || order.id;
+  const confirmDelete = confirm(`Delete order ${orderNo}?
+
+This action cannot be undone.`);
+  if (!confirmDelete) return;
+
+  try {
+    await deleteDoc(doc(db, collectionName, id));
+    await loadOrders();
+    alert("Order deleted successfully.");
+  } catch(error) {
+    console.error(error);
+    alert("Failed to delete order. Please check Firestore Rules.");
+  }
+};
+
+document.getElementById("orderSearch").addEventListener("input", resetOrdersPage);
+document.getElementById("orderStatusFilter").addEventListener("change", resetOrdersPage);
+document.getElementById("orderDateFilter").addEventListener("change", resetOrdersPage);
+document.getElementById("orderSortBy").addEventListener("change", resetOrdersPage);
+document.getElementById("ordersPerPage").addEventListener("change", resetOrdersPage);
+document.getElementById("refreshOrdersBtn").addEventListener("click", async () => { currentOrdersPage = 1; await loadOrders(); });
+document.getElementById("prevOrdersPage").addEventListener("click", () => { if (currentOrdersPage > 1) { currentOrdersPage--; renderOrdersTable(); } });
+document.getElementById("nextOrdersPage").addEventListener("click", () => { currentOrdersPage++; renderOrdersTable(); });
+
+document.getElementById("subscriberSearch")?.addEventListener("input", renderSubscribersTable);
+document.getElementById("refreshSubscribersBtn")?.addEventListener("click", loadSubscribers);
+document.getElementById("exportSubscribersBtn")?.addEventListener("click", exportSubscribersCSV);
+
 </script>
 </body>
 </html>
