@@ -45,6 +45,9 @@
     .copy-address{margin-top:8px;width:100%;background:#FFF1F7;color:#ED337F}
     .filters{display:grid;grid-template-columns:1.4fr 180px 180px 180px 140px 160px;gap:12px;margin-bottom:16px;align-items:end}
     .orders-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 0 16px}
+    .export-actions{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 16px}
+    .export-actions button{background:#ED337F;color:white}
+    .export-actions .secondary{background:#FFF1F7;color:#ED337F}
     .orders-info{font-size:13px;color:#8C7C6C;font-weight:700}
     .pagination{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
     .pagination button{background:#FFF1F7;color:#ED337F}
@@ -148,6 +151,12 @@
         <option value="100">Show 100</option>
       </select>
       <button class="secondary" type="button" id="refreshOrdersBtn">Refresh Orders</button>
+    </div>
+    <div class="export-actions">
+      <button type="button" id="exportAllOrdersBtn">Export All Orders</button>
+      <button type="button" id="exportPaidOrdersBtn">Export Paid Orders</button>
+      <button type="button" id="exportUnpaidOrdersBtn">Export Unpaid Orders</button>
+      <button type="button" class="secondary" id="exportFilteredOrdersBtn">Export Current Filter</button>
     </div>
     <div class="orders-toolbar">
       <div class="orders-info" id="ordersInfo">Showing 0 orders</div>
@@ -1021,6 +1030,127 @@ This action cannot be undone.`);
   }
 };
 
+
+function csvSafe(value){
+  return `"${String(value ?? "").replace(/"/g, '""')}"`;
+}
+
+function formatOrderDate(value){
+  const d = toDate(value);
+  return d ? d.toLocaleString("en-MY") : "";
+}
+
+function getFilteredOrdersForExport(){
+  const search = (document.getElementById("orderSearch")?.value || "").toLowerCase().trim();
+  const statusFilter = document.getElementById("orderStatusFilter")?.value || "";
+  const dateFilter = document.getElementById("orderDateFilter")?.value || "all";
+
+  return orders.filter(o => {
+    const paymentStatus = String(o.paymentStatus || (o.status === "paid" ? "paid" : "unpaid")).toLowerCase();
+    const orderStatus = String(o.status || "pending").toLowerCase();
+    const haystack = [
+      o.orderNumber,
+      o.orderNo,
+      getCustomerName(o),
+      getCustomerEmail(o),
+      getCustomerPhone(o),
+      o.status,
+      o.paymentStatus
+    ].join(" ").toLowerCase();
+
+    const matchSearch = !search || haystack.includes(search);
+    const matchDate = matchesDateFilter(o, dateFilter);
+
+    let matchStatus = true;
+    if (statusFilter === "paid") matchStatus = paymentStatus === "paid";
+    else if (statusFilter === "unpaid") matchStatus = paymentStatus !== "paid";
+    else if (statusFilter) matchStatus = orderStatus === statusFilter;
+
+    return matchSearch && matchStatus && matchDate;
+  });
+}
+
+function exportOrdersCSV(type = "all"){
+  let exportData = [...orders];
+
+  if (type === "paid") {
+    exportData = exportData.filter(o => String(o.paymentStatus || "").toLowerCase() === "paid");
+  }
+
+  if (type === "unpaid") {
+    exportData = exportData.filter(o => String(o.paymentStatus || "").toLowerCase() !== "paid");
+  }
+
+  if (type === "filtered") {
+    exportData = getFilteredOrdersForExport();
+  }
+
+  if (!exportData.length) {
+    alert("No orders to export.");
+    return;
+  }
+
+  const headers = [
+    "Order Number",
+    "Date Created",
+    "Customer Name",
+    "Email",
+    "Phone",
+    "Address",
+    "Products",
+    "Total Amount",
+    "Payment Status",
+    "Order Status",
+    "Payment Method",
+    "Courier",
+    "Tracking Number"
+  ];
+
+  const rows = exportData.map(order => {
+    const items = Array.isArray(order.items) ? order.items : [];
+    const productList = items.map(item => {
+      const qty = item.qty || item.quantity || 1;
+      const size = item.size ? `Size ${item.size}` : "No size";
+      const price = item.price || item.unitPrice || 0;
+      return `${item.name || "Item"} (${size}) x${qty} @ RM${price}`;
+    }).join(" | ");
+
+    const address = buildAddressText(order).replace(/\n/g, ", ");
+
+    return [
+      order.orderNumber || order.orderNo || order.id || "",
+      formatOrderDate(order.createdAt || order.paidAt || order.updatedAt),
+      getCustomerName(order),
+      getCustomerEmail(order),
+      getCustomerPhone(order),
+      address,
+      productList,
+      orderAmount(order).toFixed(2),
+      order.paymentStatus || "unpaid",
+      order.status || "pending",
+      order.paymentMethod || order.paymentGateway || "bayarcash",
+      order.courier || "",
+      order.trackingNumber || ""
+    ];
+  });
+
+  const csv = [headers, ...rows]
+    .map(row => row.map(csvSafe).join(","))
+    .join("\n");
+
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const today = new Date().toISOString().slice(0,10);
+
+  link.href = url;
+  link.download = `veloura-orders-${type}-${today}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 document.getElementById("orderSearch").addEventListener("input", resetOrdersPage);
 document.getElementById("orderStatusFilter").addEventListener("change", resetOrdersPage);
 document.getElementById("orderDateFilter").addEventListener("change", resetOrdersPage);
@@ -1035,6 +1165,10 @@ document.getElementById("refreshSubscribersBtn")?.addEventListener("click", asyn
 document.getElementById("prevSubscribersPage")?.addEventListener("click", () => { if (currentSubscribersPage > 1) { currentSubscribersPage--; renderSubscribersTable(); } });
 document.getElementById("nextSubscribersPage")?.addEventListener("click", () => { currentSubscribersPage++; renderSubscribersTable(); });
 document.getElementById("exportSubscribersBtn")?.addEventListener("click", exportSubscribersCSV);
+document.getElementById("exportAllOrdersBtn")?.addEventListener("click", () => exportOrdersCSV("all"));
+document.getElementById("exportPaidOrdersBtn")?.addEventListener("click", () => exportOrdersCSV("paid"));
+document.getElementById("exportUnpaidOrdersBtn")?.addEventListener("click", () => exportOrdersCSV("unpaid"));
+document.getElementById("exportFilteredOrdersBtn")?.addEventListener("click", () => exportOrdersCSV("filtered"));
 
 </script>
 </body>
