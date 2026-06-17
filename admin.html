@@ -717,6 +717,7 @@ function renderOrdersTable(){
           <input id="courier-${o.id}" placeholder="Courier e.g. J&T" value="${courier}" ${fulfilmentDisabled}>
           <input id="tracking-${o.id}" placeholder="Tracking number" value="${trackingNumber}" ${fulfilmentDisabled}>
           <button type="button" class="secondary" ${fulfilmentDisabled} onclick="saveTracking('${o.id}','${o._collection}')">Save Tracking</button>
+          <button type="button" class="success" ${(!isPaid || !trackingNumber) ? "disabled" : ""} onclick="sendWhatsAppCustomer('${o.id}')">WhatsApp Customer</button>
         </div>
       </td>
       <td>
@@ -975,6 +976,63 @@ window.markPaid = async function(id, collectionName='Orders'){
 
 window.quickStatus = async function(id, status, collectionName='Orders'){
   await updateOrderStatus(id, status, collectionName);
+};
+
+
+function normalizeWhatsAppPhone(phone){
+  let digits = String(phone || "").replace(/\D/g, "");
+
+  if (!digits) return "";
+
+  // Malaysia mobile format: 0123456789 -> 60123456789
+  if (digits.startsWith("0")) {
+    digits = "6" + digits;
+  }
+
+  // If user enters 123456789 without country code, assume Malaysia mobile.
+  if (!digits.startsWith("60") && digits.length >= 9 && digits.length <= 11) {
+    digits = "60" + digits;
+  }
+
+  return digits;
+}
+
+window.sendWhatsAppCustomer = function(id){
+  const order = findOrderById(id);
+
+  if (!order) {
+    alert("Order not found.");
+    return;
+  }
+
+  const phone = normalizeWhatsAppPhone(getCustomerPhone(order));
+  const customerName = getCustomerName(order);
+  const orderNo = order.orderNumber || order.orderNo || order.id;
+  const courier = order.courier || "";
+  const trackingNumber = order.trackingNumber || "";
+
+  if (!phone) {
+    alert("Customer phone number not found.");
+    return;
+  }
+
+  if (!trackingNumber) {
+    alert("Please save courier and tracking number first.");
+    return;
+  }
+
+  const message = `Hi ${customerName},
+
+Good news! Your VELOURA order has been shipped.
+
+Order No: ${orderNo}
+Courier: ${courier || "Courier"}
+Tracking No: ${trackingNumber}
+
+Thank you for shopping with VELOURA.`;
+
+  const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  window.open(url, "_blank");
 };
 
 window.saveTracking = async function(id, collectionName='Orders'){
