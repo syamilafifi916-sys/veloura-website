@@ -1115,7 +1115,14 @@ function exportOrdersCSV(type = "all"){
       return `${item.name || "Item"} (${size}) x${qty} @ RM${price}`;
     }).join(" | ");
 
-    const address = buildAddressText(order).replace(/\n/g, ", ");
+    const addressParts = getAddressParts(order);
+    const address = [
+      addressParts.address,
+      addressParts.address2,
+      `${addressParts.postcode} ${addressParts.city}`.trim(),
+      addressParts.state,
+      addressParts.country
+    ].filter(Boolean).join(", ");
 
     return [
       order.orderNumber || order.orderNo || order.id || "",
