@@ -2103,6 +2103,113 @@ h1,h2,h3,.section-title,.hero-title,.newsletter-title,.modal-title{font-family:v
   .hero .container{padding-bottom:4rem;}
 }
 </style>
+
+<style id="two-product-launch-polish">
+/* TWO PRODUCT LAUNCH POLISH
+   Optimised for Ivory Luxe + Rosé Glow only */
+#collection .container{
+  max-width: 1220px !important;
+}
+
+#collection .section-title,
+#collection .section-subtitle,
+#collection .kicker{
+  text-align: left !important;
+}
+
+#collection .section-subtitle{
+  max-width: 760px !important;
+  margin-bottom: 54px !important;
+}
+
+#productsGrid.products-grid,
+#collection .products-grid{
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  max-width: 1180px !important;
+  margin: 0 auto !important;
+  gap: 46px !important;
+  justify-content: center !important;
+  align-items: start !important;
+}
+
+#collection .product-card.catalog-clean{
+  width: 100% !important;
+}
+
+#collection .product-card.catalog-clean .product-img{
+  height: 680px !important;
+  width: 100% !important;
+  object-fit: cover !important;
+  object-position: center top !important;
+  border-radius: 14px !important;
+}
+
+#collection .product-card.catalog-clean .product-badge{
+  bottom: 150px !important;
+}
+
+#collection .product-title{
+  font-size: clamp(1.35rem, 2vw, 2rem) !important;
+  line-height: 1.18 !important;
+}
+
+#collection .product-category{
+  font-size: .76rem !important;
+  letter-spacing: .26em !important;
+}
+
+#collection .product-current{
+  font-size: 1.35rem !important;
+}
+
+#collection .product-original{
+  font-size: 1.05rem !important;
+}
+
+@media (min-width: 768px) and (max-width: 1100px){
+  #productsGrid.products-grid,
+  #collection .products-grid{
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 28px !important;
+    max-width: 920px !important;
+  }
+
+  #collection .product-card.catalog-clean .product-img{
+    height: 560px !important;
+  }
+}
+
+@media (max-width: 767px){
+  #collection .section-title,
+  #collection .section-subtitle,
+  #collection .kicker{
+    text-align: left !important;
+  }
+
+  #productsGrid.products-grid,
+  #collection .products-grid{
+    grid-template-columns: 1fr !important;
+    gap: 38px !important;
+    max-width: 560px !important;
+  }
+
+  #collection .product-card.catalog-clean .product-img{
+    height: 560px !important;
+  }
+
+  #collection .product-card.catalog-clean .product-badge{
+    bottom: 126px !important;
+  }
+}
+
+@media (max-width: 420px){
+  #collection .product-card.catalog-clean .product-img{
+    height: 500px !important;
+  }
+}
+</style>
+
 </head>
 <body>
     <div class="announcement-bar">
@@ -2227,7 +2334,7 @@ h1,h2,h3,.section-title,.hero-title,.newsletter-title,.modal-title{font-family:v
         <div class="container">
             <div class="kicker">New Launch</div>
             <h2 class="section-title">New Launch Collection</h2>
-            <p class="section-subtitle">Product Name, Ori Price and Sale Price. Click product image for detailing and sizing with picture slider.</p>
+            <p class="section-subtitle">Two signature linen pieces in a refined launch edit. Click each product image to view details, sizing and gallery.</p>
             <div class="products-grid" id="productsGrid"></div>
         </div>
     </section>
