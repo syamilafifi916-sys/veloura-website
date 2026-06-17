@@ -2044,7 +2044,7 @@ h1,h2,h3,.section-title,.hero-title,.newsletter-title,.modal-title{font-family:v
 .btn-secondary:hover{background:#fff!important;color:var(--espresso)!important;}
 
 /* HERO slider */
-.hero{height:90vh!important;min-height:620px!important;position:relative!important;overflow:hidden!important;display:flex;align-items:flex-end;}
+.hero{height:90vh!important;min-height:620px!important;position:relative!important;overflow:hidden!important;display:flex;align-items:flex-end;margin-top:0!important;}
 .hero-slider{position:absolute;inset:0;z-index:0;}
 .hero-slide{position:absolute;inset:0;background-size:cover;background-position:center 22%;opacity:0;transition:opacity 1.2s ease;transform:scale(1.04);}
 .hero-slide.active{opacity:1;animation:heroZoom 6s ease forwards;}
@@ -2240,18 +2240,26 @@ h1,h2,h3,.section-title,.hero-title,.newsletter-title,.modal-title{font-family:v
 
   #productsGrid.products-grid,
   #collection .products-grid{
-    grid-template-columns: 1fr !important;
-    gap: 38px !important;
-    max-width: 560px !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+    max-width: 100% !important;
   }
 
   #collection .product-card.catalog-clean .product-img{
-    height: 560px !important;
+    height: auto !important;
+    aspect-ratio: 3 / 4 !important;
   }
 
   #collection .product-card.catalog-clean .product-badge{
-    bottom: 126px !important;
+    bottom: auto !important;
+    top: 10px !important;
+    left: 10px !important;
   }
+
+  #collection .product-title{ font-size: 1.05rem !important; line-height: 1.2 !important; }
+  #collection .product-category{ font-size: .6rem !important; letter-spacing: .16em !important; }
+  #collection .product-current{ font-size: 1.05rem !important; }
+  #collection .product-original{ font-size: .82rem !important; }
 }
 
 @media (max-width: 420px){
@@ -2261,6 +2269,12 @@ h1,h2,h3,.section-title,.hero-title,.newsletter-title,.modal-title{font-family:v
 }
 </style>
 
+<style id="veloura-grid-fix">
+/* New Launch grid: balanced, centered 2-up (matches mobile layout) */
+.products-grid{grid-template-columns:repeat(2,1fr)!important;gap:2.2rem!important;max-width:820px;margin-left:auto!important;margin-right:auto!important;}
+@media(min-width:1200px){.products-grid{grid-template-columns:repeat(2,1fr)!important;gap:2.6rem!important;max-width:900px;}}
+@media(max-width:560px){.products-grid{gap:1.1rem!important;}}
+</style>
 </head>
 <body>
     <div class="announcement-bar">
