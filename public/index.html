@@ -2613,7 +2613,8 @@ h1,h2,h3,.section-title,.hero-title,.newsletter-title,.modal-title{font-family:v
             <div class="cart-agreements">
                 <div class="cart-agreement"><input type="checkbox" id="agreeTerms"><label for="agreeTerms">I confirm that I have reviewed and agree to VELOURA's Terms & Conditions.</label></div>
                 <div class="cart-agreement"><input type="checkbox" id="agreePreorder"><label for="agreePreorder">I understand that all items are made on a pre-order basis with 2–4 weeks production time.</label></div>
-                <div class="cart-agreement"><input type="checkbox" id="agreeFinal"><label for="agreeFinal">I acknowledge that all sales are final except eligible defective item or size exchange requests.</label></div>
+                <div class="cart-agreement"><input type="checkbox" id="agreeFinal"><label for="agreeFinal">I acknowledge that all sales are final, and returns/refunds are not accepted for change of mind or incorrect size selection.</label></div>
+                <div class="cart-agreement"><input type="checkbox" id="agreeExchange"><label for="agreeExchange">I understand that only defective items or eligible size exchanges (subject to availability) are accepted under the Return & Exchange Policy.</label></div>
             </div>
             <button class="cart-checkout" id="checkoutBtn">Proceed to Checkout</button>
         </div>
@@ -3010,8 +3011,9 @@ h1,h2,h3,.section-title,.hero-title,.newsletter-title,.modal-title{font-family:v
             const agreeTerms = document.getElementById('agreeTerms').checked;
             const agreePreorder = document.getElementById('agreePreorder').checked;
             const agreeFinal = document.getElementById('agreeFinal').checked;
+            const agreeExchange = document.getElementById('agreeExchange').checked;
 
-            if (!agreeTerms || !agreePreorder || !agreeFinal) {
+            if (!agreeTerms || !agreePreorder || !agreeFinal || !agreeExchange) {
                 alert('Sila tick semua checkout agreement sebelum proceed.');
                 return;
             }
