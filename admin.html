@@ -717,7 +717,7 @@ function renderOrdersTable(){
           <input id="courier-${o.id}" placeholder="Courier e.g. J&T" value="${courier}" ${fulfilmentDisabled}>
           <input id="tracking-${o.id}" placeholder="Tracking number" value="${trackingNumber}" ${fulfilmentDisabled}>
           <button type="button" class="secondary" ${fulfilmentDisabled} onclick="saveTracking('${o.id}','${o._collection}')">Save Tracking</button>
-          <button type="button" class="success" ${(!isPaid || !trackingNumber) ? "disabled" : ""} onclick="sendWhatsAppCustomer('${o.id}')">WhatsApp Customer</button>
+          <button type="button" class="success" ${(!isPaid || !["processing","shipped","delivered"].includes(orderStatus) || (orderStatus === "shipped" && !trackingNumber)) ? "disabled" : ""} onclick="sendWhatsAppCustomer('${o.id}')">WhatsApp Customer</button>
         </div>
       </td>
       <td>
@@ -1008,6 +1008,7 @@ window.sendWhatsAppCustomer = function(id){
   const phone = normalizeWhatsAppPhone(getCustomerPhone(order));
   const customerName = getCustomerName(order);
   const orderNo = order.orderNumber || order.orderNo || order.id;
+  const orderStatus = String(order.status || "pending").toLowerCase();
   const courier = order.courier || "";
   const trackingNumber = order.trackingNumber || "";
 
@@ -1016,12 +1017,32 @@ window.sendWhatsAppCustomer = function(id){
     return;
   }
 
-  if (!trackingNumber) {
+  if (!["processing", "shipped", "delivered"].includes(orderStatus)) {
+    alert("WhatsApp message is available for Processing, Shipped and Delivered orders only.");
+    return;
+  }
+
+  if (orderStatus === "shipped" && !trackingNumber) {
     alert("Please save courier and tracking number first.");
     return;
   }
 
-  const message = `Hi ${customerName},
+  let message = "";
+
+  if (orderStatus === "processing") {
+    message = `Hi ${customerName},
+
+Thank you for your order.
+
+Your VELOURA order ${orderNo} is currently being processed by our team.
+
+As all VELOURA pieces are made on a pre-order basis, production may take approximately 2–4 weeks.
+
+We appreciate your patience and thank you for shopping with VELOURA.`;
+  }
+
+  if (orderStatus === "shipped") {
+    message = `Hi ${customerName},
 
 Good news! Your VELOURA order has been shipped.
 
@@ -1030,6 +1051,17 @@ Courier: ${courier || "Courier"}
 Tracking No: ${trackingNumber}
 
 Thank you for shopping with VELOURA.`;
+  }
+
+  if (orderStatus === "delivered") {
+    message = `Hi ${customerName},
+
+We hope you have received your VELOURA order ${orderNo} safely.
+
+Thank you for supporting VELOURA.
+
+We would love to see you wearing your VELOURA piece. Feel free to tag us on Instagram.`;
+  }
 
   const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
   window.open(url, "_blank");
