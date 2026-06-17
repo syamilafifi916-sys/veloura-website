@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment Status | Veloura</title>
+  <style>
+    :root{--primary:#ED337F;--primary-dark:#B91F60;--bg:#FFF7EA;--text:#4D3B40;--dark:#2B1E22;--border:#F1E8D8;--success:#2e7d32;--warning:#7a4b00;--danger:#C44536}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:var(--bg);font-family:Arial,sans-serif;color:var(--text);display:flex;align-items:center;justify-content:center;padding:22px}
+    .card{width:min(620px,100%);background:#fff;border:1px solid var(--border);border-radius:24px;padding:34px;text-align:center;box-shadow:0 18px 60px rgba(43,30,34,.10)}
+    .logo{letter-spacing:7px;font-weight:900;color:var(--primary);font-size:24px;margin-bottom:20px}
+    .icon{width:86px;height:86px;border-radius:50%;display:grid;place-items:center;margin:0 auto 20px;font-size:44px;font-weight:900}
+    .icon.pending{background:#fff3cd;color:var(--warning)}
+    .icon.paid{background:#e8f7ec;color:var(--success)}
+    .icon.failed{background:#fdecea;color:var(--danger)}
+    h1{margin:0 0 14px;color:var(--dark);font-family:Georgia,serif;font-size:clamp(30px,5vw,46px);line-height:1}
+    p{font-size:16px;line-height:1.65;margin:0 0 14px;color:var(--text)}
+    .order{display:inline-block;margin:12px 0 20px;padding:10px 14px;border-radius:999px;background:#FFF1F7;color:var(--primary);font-weight:800}
+    .actions{display:grid;gap:10px;margin-top:22px}
+    a,button{display:block;width:100%;border:none;border-radius:12px;padding:14px 18px;text-decoration:none;font-weight:900;text-transform:uppercase;letter-spacing:.5px;cursor:pointer}
+    .primary{background:var(--primary);color:white}.primary:hover{background:var(--primary-dark)}
+    .secondary{background:#FFF1F7;color:var(--primary)}
+    .small{font-size:13px;color:#8B7A7E;margin-top:18px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">VELOURA</div>
+    <div id="statusIcon" class="icon pending">…</div>
+    <h1 id="statusTitle">Checking Payment</h1>
+    <p id="statusMessage">Please wait while we verify your payment status.</p>
+    <div id="orderNo" class="order" style="display:none"></div>
+    <div class="actions">
+      <a class="primary" id="trackLink" href="track-order.html">Track Order</a>
+      <a class="secondary" href="index.html">Back to Shop</a>
+    </div>
+    <p class="small">If you cancelled payment or did not complete bank authorisation, your order will remain unpaid.</p>
+  </div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBePIBUOZ9WApSG2MyXjOBzFRpDzH63NlI",
+  authDomain: "veloura-b86d8.firebaseapp.com",
+  projectId: "veloura-b86d8",
+  storageBucket: "veloura-b86d8.firebasestorage.app",
+  messagingSenderId: "425278142821",
+  appId: "1:425278142821:web:59861b129be1bd648c098c"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const params = new URLSearchParams(window.location.search);
+const orderId = params.get("id");
+const orderNumber = params.get("order") || "";
+
+const icon = document.getElementById("statusIcon");
+const title = document.getElementById("statusTitle");
+const message = document.getElementById("statusMessage");
+const orderNo = document.getElementById("orderNo");
+const trackLink = document.getElementById("trackLink");
+
+function setState(state, iconText, heading, body){
+  icon.className = `icon ${state}`;
+  icon.textContent = iconText;
+  title.textContent = heading;
+  message.textContent = body;
+}
+
+if (orderNumber) {
+  orderNo.style.display = "inline-block";
+  orderNo.textContent = `Order: ${orderNumber}`;
+  trackLink.href = `track-order.html?order=${encodeURIComponent(orderNumber)}`;
+}
+
+async function checkPayment(){
+  if (!orderId) {
+    setState("pending", "!", "Payment Verification In Progress", "Your order has been received, but we cannot verify payment on this page. Please check your order status shortly.");
+    return;
+  }
+
+  try {
+    const snap = await getDoc(doc(db, "Orders", orderId));
+    if (!snap.exists()) {
+      setState("pending", "!", "Order Received", "We could not find the payment status yet. Please check your order status shortly.");
+      return;
+    }
+
+    const order = snap.data();
+    const paymentStatus = String(order.paymentStatus || "unpaid").toLowerCase();
+
+    if (paymentStatus === "paid") {
+      setState("paid", "✓", "Payment Confirmed", "Thank you. Your Veloura payment has been successfully verified.");
+    } else if (["failed", "payment_failed", "cancelled", "canceled", "expired"].includes(paymentStatus) || String(order.status || "").toLowerCase() === "payment_failed") {
+      setState("failed", "×", "Payment Not Completed", "Your payment was not completed. You may place a new order or contact us for assistance.");
+    } else {
+      setState("pending", "!", "Payment Verification In Progress", "Your order has been received. Payment is not confirmed yet. If you cancelled at the bank page, your order will remain unpaid.");
+    }
+  } catch (error) {
+    console.error(error);
+    setState("pending", "!", "Payment Verification In Progress", "Your order has been received, but payment verification is still pending. Please check your order status shortly.");
+  }
+}
+
+checkPayment();
+</script>
+</body>
+</html>

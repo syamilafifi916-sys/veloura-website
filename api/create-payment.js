@@ -103,7 +103,7 @@ export default async function handler(req, res) {
     });
 
     const returnUrl =
-      `${process.env.SITE_URL}/payment-success.html?order=${encodeURIComponent(orderNumber)}&id=${orderRef.id}`;
+`${process.env.SITE_URL}/payment-status.html?order=${encodeURIComponent(orderNumber)}&id=${orderRef.id}`;
 
     const metadata = JSON.stringify({
       orderId: orderRef.id,
