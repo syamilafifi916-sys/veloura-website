@@ -294,8 +294,24 @@ let subscribers = [];
 let currentOrdersPage = 1;
 
 onAuthStateChanged(auth, (user) => {
-  if (!user) window.location.href = "admin-login.html";
-  else init();
+  if (!user) {
+    window.location.href = "admin-login.html";
+    return;
+  }
+
+  const superAdmins = [
+    "syamilafifi36@gmail.com"
+  ];
+
+  const userEmail = String(user.email || "").toLowerCase();
+
+  if (!superAdmins.includes(userEmail)) {
+    alert("Access denied. This page is for Super Admin only.");
+    window.location.href = "admin.html";
+    return;
+  }
+
+  init();
 });
 
 document.getElementById("logoutBtn").onclick = async () => {
