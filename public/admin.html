@@ -176,6 +176,14 @@
       </div>
     </div>
     <input class="subscriber-search" id="subscriberSearch" placeholder="Search subscriber email">
+    <div class="orders-toolbar">
+      <div class="orders-info" id="subscribersInfo">Showing 0 subscribers</div>
+      <div class="pagination">
+        <button type="button" id="prevSubscribersPage">Previous</button>
+        <span class="orders-info" id="subscribersPageInfo">Page 1 of 1</span>
+        <button type="button" id="nextSubscribersPage">Next</button>
+      </div>
+    </div>
     <table>
       <thead>
         <tr>
@@ -274,6 +282,8 @@ let products = [];
 let orders = [];
 let subscribers = [];
 let currentOrdersPage = 1;
+let currentSubscribersPage = 1;
+const subscribersPerPage = 10;
 
 onAuthStateChanged(auth, (user) => {
   if (!user) window.location.href = "admin-login.html";
@@ -329,7 +339,7 @@ async function loadProducts(){
       <td>
         <div class="product-actions">
           <button class="edit-btn" type="button" onclick="openEditProductModal('${p.id}')">Edit</button>
-          <button type="button" onclick="toggleStatus('${p.id}','${p.status || "active"}','${p._collection}')">Toggle Status</button>
+          <button type="button" onclick="toggleStatus('${p.id}','${p.status || "active"}','${p._collection}')">${(p.status || "active") === "active" ? "Deactivate" : "Activate"}</button>
           <button class="danger" type="button" onclick="deleteProduct('${p.id}','${p._collection}')">Delete</button>
         </div>
       </td>
@@ -446,7 +456,30 @@ function renderSubscribersTable(){
     return db - da;
   });
 
-  document.getElementById("subscribersTable").innerHTML = filtered.length ? filtered.map(s => `
+  const totalFiltered = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / subscribersPerPage));
+  if (currentSubscribersPage > totalPages) currentSubscribersPage = totalPages;
+
+  const startIndex = (currentSubscribersPage - 1) * subscribersPerPage;
+  const endIndex = startIndex + subscribersPerPage;
+  const pageSubscribers = filtered.slice(startIndex, endIndex);
+
+  const subscribersInfo = document.getElementById("subscribersInfo");
+  const subscribersPageInfo = document.getElementById("subscribersPageInfo");
+  const prevBtn = document.getElementById("prevSubscribersPage");
+  const nextBtn = document.getElementById("nextSubscribersPage");
+
+  if (subscribersInfo) {
+    subscribersInfo.textContent = totalFiltered
+      ? `Showing ${startIndex + 1}-${Math.min(endIndex, totalFiltered)} of ${totalFiltered} subscribers`
+      : "Showing 0 subscribers";
+  }
+
+  if (subscribersPageInfo) subscribersPageInfo.textContent = `Page ${currentSubscribersPage} of ${totalPages}`;
+  if (prevBtn) prevBtn.disabled = currentSubscribersPage <= 1;
+  if (nextBtn) nextBtn.disabled = currentSubscribersPage >= totalPages;
+
+  document.getElementById("subscribersTable").innerHTML = pageSubscribers.length ? pageSubscribers.map(s => `
     <tr>
       <td><strong>${s.email || "-"}</strong><br><span class="small">Collection: ${s._collection}</span></td>
       <td>${s.source || "-"}</td>
@@ -454,6 +487,11 @@ function renderSubscribersTable(){
       <td>${subscriberDate(s.createdAt)}</td>
     </tr>
   `).join("") : `<tr><td colspan="4">No subscribers found.</td></tr>`;
+}
+
+function resetSubscribersPage(){
+  currentSubscribersPage = 1;
+  renderSubscribersTable();
 }
 
 function exportSubscribersCSV(){
@@ -944,8 +982,10 @@ document.getElementById("refreshOrdersBtn").addEventListener("click", async () =
 document.getElementById("prevOrdersPage").addEventListener("click", () => { if (currentOrdersPage > 1) { currentOrdersPage--; renderOrdersTable(); } });
 document.getElementById("nextOrdersPage").addEventListener("click", () => { currentOrdersPage++; renderOrdersTable(); });
 
-document.getElementById("subscriberSearch")?.addEventListener("input", renderSubscribersTable);
-document.getElementById("refreshSubscribersBtn")?.addEventListener("click", loadSubscribers);
+document.getElementById("subscriberSearch")?.addEventListener("input", resetSubscribersPage);
+document.getElementById("refreshSubscribersBtn")?.addEventListener("click", async () => { currentSubscribersPage = 1; await loadSubscribers(); });
+document.getElementById("prevSubscribersPage")?.addEventListener("click", () => { if (currentSubscribersPage > 1) { currentSubscribersPage--; renderSubscribersTable(); } });
+document.getElementById("nextSubscribersPage")?.addEventListener("click", () => { currentSubscribersPage++; renderSubscribersTable(); });
 document.getElementById("exportSubscribersBtn")?.addEventListener("click", exportSubscribersCSV);
 
 </script>
