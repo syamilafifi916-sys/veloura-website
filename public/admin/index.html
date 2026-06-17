@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Veloura Admin Dashboard</title>
+  <title>Veloura Client Admin Dashboard</title>
   <style>
     body{margin:0;font-family:Arial,sans-serif;background:#FFF7EA;color:#ED337F}
     header{background:#ED337F;color:white;padding:18px 24px;display:flex;justify-content:space-between;align-items:center}
@@ -11,7 +11,7 @@
     button{border:none;border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:700}
     .logout{background:#ED337F;color:#ED337F}
     main{max-width:1200px;margin:auto;padding:28px 18px}
-    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}.analytics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}.analytics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
     .card{background:white;border:1px solid #F4D7E5;border-radius:16px;padding:18px;box-shadow:0 8px 30px rgba(44,24,16,.08)}
     .card h3{margin:0 0 6px;color:#ED337F}
     .card strong{font-size:28px}
@@ -69,7 +69,7 @@
 
 <body>
 <header>
-  <h1>VELOURA ADMIN</h1>
+  <h1>VELOURA CLIENT ADMIN</h1>
   <button class="logout" id="logoutBtn">Logout</button>
 </header>
 
@@ -83,28 +83,10 @@
   </div>
 
   <div class="analytics-grid">
-    <div class="card"><h3>Revenue Today</h3><strong id="revenueToday">RM 0</strong></div>
-    <div class="card"><h3>Revenue This Month</h3><strong id="revenueMonth">RM 0</strong></div>
     <div class="card"><h3>Pending Payment</h3><strong id="pendingPayment">0</strong></div>
     <div class="card"><h3>Processing</h3><strong id="processingOrders">0</strong></div>
     <div class="card"><h3>Shipped</h3><strong id="shippedOrders">0</strong></div>
     <div class="card"><h3>Delivered</h3><strong id="deliveredOrders">0</strong></div>
-  </div>
-
-  <div class="section">
-    <h2>Add Product</h2>
-    <form id="productForm">
-      <div class="form-grid">
-        <input id="name" placeholder="Product Name" required />
-        <input id="category" placeholder="Category" required />
-        <input id="price" type="number" placeholder="Sale Price" required />
-        <input id="oriPrice" type="number" placeholder="Original Price" />
-        <input id="stock" type="number" placeholder="Stock" />
-        <input id="imageUrl" placeholder="Image URL" />
-        <textarea id="description" placeholder="Description"></textarea>
-      </div>
-      <button class="save" type="submit">Save Product</button>
-    </form>
   </div>
 
   <div class="section">
@@ -122,30 +104,6 @@
       <tbody id="productsTable"></tbody>
     </table>
   </div>
-
-
-  <div class="section">
-    <div class="section-header">
-      <h2>Subscribers</h2>
-      <div class="subscriber-actions">
-        <button class="secondary" type="button" id="refreshSubscribersBtn">Refresh Subscribers</button>
-        <button class="save" type="button" id="exportSubscribersBtn" style="margin-top:0">Export CSV</button>
-      </div>
-    </div>
-    <input class="subscriber-search" id="subscriberSearch" placeholder="Search subscriber email">
-    <table>
-      <thead>
-        <tr>
-          <th>Email</th>
-          <th>Source</th>
-          <th>Status</th>
-          <th>Date Joined</th>
-        </tr>
-      </thead>
-      <tbody id="subscribersTable"></tbody>
-    </table>
-  </div>
-
   <div class="section">
     <h2>Orders</h2>
     <div class="filters">
@@ -206,6 +164,31 @@
       <tbody id="ordersTable"></tbody>
     </table>
   </div>
+
+
+
+  <div class="section">
+    <div class="section-header">
+      <h2>Subscribers</h2>
+      <div class="subscriber-actions">
+        <button class="secondary" type="button" id="refreshSubscribersBtn">Refresh Subscribers</button>
+        <button class="save" type="button" id="exportSubscribersBtn" style="margin-top:0">Export CSV</button>
+      </div>
+    </div>
+    <input class="subscriber-search" id="subscriberSearch" placeholder="Search subscriber email">
+    <table>
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Source</th>
+          <th>Status</th>
+          <th>Date Joined</th>
+        </tr>
+      </thead>
+      <tbody id="subscribersTable"></tbody>
+    </table>
+  </div>
+
 </main>
 
 <div class="modal-overlay" id="editProductModal" aria-hidden="true">
@@ -419,16 +402,6 @@ function isPaidOrder(o){
 }
 
 function updateAnalytics(){
-  const now = new Date();
-  const paidOrders = orders.filter(isPaidOrder);
-
-  const revenueToday = paidOrders
-    .filter(o => isSameDay(toDate(o.paidAt || o.createdAt), now))
-    .reduce((sum,o) => sum + orderAmount(o), 0);
-
-  const revenueMonth = paidOrders
-    .filter(o => isSameMonth(toDate(o.paidAt || o.createdAt), now))
-    .reduce((sum,o) => sum + orderAmount(o), 0);
 
   const pendingPayment = orders.filter(o =>
     String(o.paymentStatus || "unpaid").toLowerCase() !== "paid"
@@ -438,8 +411,6 @@ function updateAnalytics(){
   const shipped = orders.filter(o => (o.status || "") === "shipped").length;
   const delivered = orders.filter(o => ["delivered","completed"].includes(o.status || "")).length;
 
-  document.getElementById("revenueToday").textContent = `RM ${revenueToday.toFixed(2)}`;
-  document.getElementById("revenueMonth").textContent = `RM ${revenueMonth.toFixed(2)}`;
   document.getElementById("pendingPayment").textContent = pendingPayment;
   document.getElementById("processingOrders").textContent = processing;
   document.getElementById("shippedOrders").textContent = shipped;
@@ -735,44 +706,6 @@ function renderItems(items){
     return `${i.name || "Item"} × ${qty}<br><span class="small">${i.size || ""} ${i.color || ""} · RM ${subtotal.toFixed(2)}</span>`;
   }).join("<br><br>");
 }
-document.getElementById("productForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const saveBtn = e.target.querySelector("button[type='submit']");
-  const originalText = saveBtn.textContent;
-  saveBtn.disabled = true;
-  saveBtn.textContent = "Saving...";
-
-  try {
-    const stockValue = Number(document.getElementById("stock").value || 0);
-
-    const product = {
-      name: document.getElementById("name").value.trim(),
-      category: document.getElementById("category").value.trim(),
-      price: Number(document.getElementById("price").value),
-      oriPrice: Number(document.getElementById("oriPrice").value || 0),
-      stock: stockValue,
-      imageUrl: document.getElementById("imageUrl").value.trim() || "https://dummyimage.com/600x800/f8f1e9/3a271f&text=VELOURA",
-      description: document.getElementById("description").value.trim(),
-      status: stockValue <= 0 ? "sold_out" : "active",
-      sizes: ["XS","S","M","L","XL","2XL","3XL","4XL"],
-      colors: ["Rose","Cream","Ash Blue","Mocha","Black"],
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    };
-
-    await addDoc(collection(db, "Products"), product);
-    e.target.reset();
-    await loadProducts();
-    alert("Product saved.");
-  } catch(error) {
-    console.error(error);
-    alert(error.message || "Failed to save product.");
-  } finally {
-    saveBtn.disabled = false;
-    saveBtn.textContent = originalText;
-  }
-});
 
 function findProductById(id){
   return products.find(p => p.id === id);
