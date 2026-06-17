@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Veloura Master Login</title>
+  <style>
+    :root{
+      --primary:#ED337F;
+      --primary-dark:#B91F60;
+      --neutral-dark:#2B1E22;
+      --neutral-bg:#FFF7EA;
+      --border:#F4D7E5;
+      --text:#4D3B40;
+      --muted:#8B7A7E;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family:Arial,sans-serif;
+      background:linear-gradient(135deg,#FFF7EA 0%,#FFF1F7 100%);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--text);
+      padding:20px;
+    }
+    .login-card{
+      width:min(420px,100%);
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:22px;
+      padding:30px;
+      box-shadow:0 18px 60px rgba(44,24,16,.12);
+    }
+    .brand{
+      text-align:center;
+      margin-bottom:26px;
+    }
+    .brand h1{
+      margin:0;
+      letter-spacing:4px;
+      color:var(--primary);
+      font-size:24px;
+    }
+    .brand p{
+      margin:8px 0 0;
+      color:var(--muted);
+      font-size:14px;
+    }
+    label{
+      display:block;
+      margin:14px 0 6px;
+      color:var(--neutral-dark);
+      font-weight:700;
+      font-size:14px;
+    }
+    input{
+      width:100%;
+      padding:14px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      font:inherit;
+      color:var(--text);
+      background:#fff;
+    }
+    button{
+      width:100%;
+      margin-top:20px;
+      padding:14px;
+      border:none;
+      border-radius:12px;
+      background:var(--primary);
+      color:white;
+      font-weight:800;
+      cursor:pointer;
+      text-transform:uppercase;
+      letter-spacing:.5px;
+    }
+    button:hover{background:var(--primary-dark)}
+    button:disabled{opacity:.6;cursor:not-allowed}
+    .error{
+      display:none;
+      margin-top:14px;
+      padding:12px;
+      border-radius:12px;
+      background:#fff3cd;
+      color:#7a4b00;
+      font-size:13px;
+      font-weight:700;
+      line-height:1.45;
+    }
+    .back{
+      display:block;
+      margin-top:18px;
+      text-align:center;
+      color:var(--primary);
+      text-decoration:none;
+      font-size:14px;
+      font-weight:700;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="brand">
+      <h1>VELOURA</h1>
+      <p>Master Admin Login</p>
+    </div>
+
+    <form id="masterLoginForm">
+      <label>Email</label>
+      <input id="email" type="email" autocomplete="email" required placeholder="superadmin@email.com" />
+
+      <label>Password</label>
+      <input id="password" type="password" autocomplete="current-password" required placeholder="Password" />
+
+      <button id="loginBtn" type="submit">Login to Master</button>
+      <div class="error" id="errorMsg"></div>
+    </form>
+
+    <a class="back" href="admin-login.html">Go to Client Admin Login</a>
+  </div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import {
+  getAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBePIBUOZ9WApSG2MyXjOBzFRpDzH63NlI",
+  authDomain: "veloura-b86d8.firebaseapp.com",
+  projectId: "veloura-b86d8",
+  storageBucket: "veloura-b86d8.firebasestorage.app",
+  messagingSenderId: "425278142821",
+  appId: "1:425278142821:web:59861b129be1bd648c098c"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+const superAdmins = [
+  "syamilafifi36@gmail.com"
+];
+
+const form = document.getElementById("masterLoginForm");
+const emailInput = document.getElementById("email");
+const passwordInput = document.getElementById("password");
+const loginBtn = document.getElementById("loginBtn");
+const errorMsg = document.getElementById("errorMsg");
+
+function showError(message){
+  errorMsg.style.display = "block";
+  errorMsg.textContent = message;
+}
+
+function isSuperAdmin(user){
+  const email = String(user?.email || "").toLowerCase();
+  return superAdmins.includes(email);
+}
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) return;
+
+  if (isSuperAdmin(user)) {
+    window.location.href = "veloura-master.html";
+    return;
+  }
+
+  await signOut(auth);
+  showError("Access denied. This login is for Super Admin only.");
+});
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  errorMsg.style.display = "none";
+  loginBtn.disabled = true;
+  loginBtn.textContent = "Checking...";
+
+  try {
+    const credential = await signInWithEmailAndPassword(
+      auth,
+      emailInput.value.trim(),
+      passwordInput.value
+    );
+
+    if (!isSuperAdmin(credential.user)) {
+      await signOut(auth);
+      showError("Access denied. This account is not registered as Super Admin.");
+      return;
+    }
+
+    window.location.href = "veloura-master.html";
+  } catch(error) {
+    console.error(error);
+    showError("Login failed. Please check email and password.");
+  } finally {
+    loginBtn.disabled = false;
+    loginBtn.textContent = "Login to Master";
+  }
+});
+</script>
+</body>
+</html>
