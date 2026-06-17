@@ -1909,6 +1909,44 @@ body{
     border-color:#3B2B31 !important;
 }
 
+
+
+/* VELOURA PRODUCT GALLERY THUMBNAILS */
+.product-thumbnails{
+    position:absolute;
+    left:22px;
+    right:22px;
+    bottom:20px;
+    z-index:3;
+    display:flex;
+    gap:10px;
+    justify-content:center;
+}
+.product-thumb-btn{
+    width:64px;
+    height:82px;
+    padding:0;
+    border:2px solid rgba(255,255,255,.65);
+    border-radius:10px;
+    overflow:hidden;
+    background:#fff;
+    opacity:.78;
+}
+.product-thumb-btn.active,
+.product-thumb-btn:hover{
+    opacity:1;
+    border-color:var(--primary);
+}
+.product-thumb-btn img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+@media(max-width:767px){
+    .product-thumbnails{bottom:14px;left:12px;right:12px;}
+    .product-thumb-btn{width:54px;height:70px;}
+}
+
 </style>
 
 <style id="veloura-reskin">
@@ -2432,6 +2470,7 @@ h1,h2,h3,.section-title,.hero-title,.newsletter-title,.modal-title{font-family:v
                 <button class="slide-btn prev" id="prevSlide"><i class="fas fa-chevron-left"></i></button>
                 <img src="" alt="Product detail" id="modalImage">
                 <button class="slide-btn next" id="nextSlide"><i class="fas fa-chevron-right"></i></button>
+                <div class="product-thumbnails" id="modalThumbnails"></div>
             </div>
             <div class="product-modal-info">
                 <div class="product-category" id="modalCategory"></div>
@@ -2445,9 +2484,6 @@ h1,h2,h3,.section-title,.hero-title,.newsletter-title,.modal-title{font-family:v
                 <div class="product-options">
                     <span class="option-label">Size</span>
                     <div id="modalSizeButtons" class="size-buttons"></div>
-
-                    <span class="option-label">Colour</span>
-                    <div id="modalColorButtons" class="color-buttons"></div>
                 </div>
 
                 <div class="modal-stock-note" id="modalStockNote"></div>
@@ -2488,38 +2524,35 @@ h1,h2,h3,.section-title,.hero-title,.newsletter-title,.modal-title{font-family:v
         let currentProduct = null;
         let currentSlide = 0;
         let selectedSize = '';
-        let selectedColor = '';
 
         const FALLBACK_PRODUCTS = [
             {
-                id: "fallback-1",
-                name: "Veloura Linen Kurung Rose",
+                id: "fallback-ivory-luxe",
+                name: "Ivory Luxe",
                 category: "100% Pure Linen",
                 originalPrice: 229,
                 salePrice: 189,
-                image: "https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=1000&auto=format&fit=crop",
+                image: "https://dummyimage.com/600x800/f8f1e9/3a271f&text=Ivory+Luxe",
                 gallery: [
-                    "https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=1000&auto=format&fit=crop",
-                    "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?q=80&w=1000&auto=format&fit=crop",
-                    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1000&auto=format&fit=crop"
+                    "https://dummyimage.com/600x800/f8f1e9/3a271f&text=Ivory+Luxe+1",
+                    "https://dummyimage.com/600x800/f8f1e9/3a271f&text=Ivory+Luxe+2",
+                    "https://dummyimage.com/600x800/f8f1e9/3a271f&text=Ivory+Luxe+3"
                 ],
-                colors: ["Rose", "Cream", "Ash Blue"],
                 sizes: ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL"],
                 status: "active"
             },
             {
-                id: "fallback-2",
-                name: "Veloura Linen Kurung Saffron",
+                id: "fallback-rose-glow",
+                name: "Rosé Glow",
                 category: "100% Pure Linen",
                 originalPrice: 229,
                 salePrice: 189,
-                image: "https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=1000&auto=format&fit=crop",
+                image: "https://dummyimage.com/600x800/f8f1e9/3a271f&text=Ros%C3%A9+Glow",
                 gallery: [
-                    "https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=1000&auto=format&fit=crop",
-                    "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?q=80&w=1000&auto=format&fit=crop",
-                    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1000&auto=format&fit=crop"
+                    "https://dummyimage.com/600x800/f8f1e9/3a271f&text=Ros%C3%A9+Glow+1",
+                    "https://dummyimage.com/600x800/f8f1e9/3a271f&text=Ros%C3%A9+Glow+2",
+                    "https://dummyimage.com/600x800/f8f1e9/3a271f&text=Ros%C3%A9+Glow+3"
                 ],
-                colors: ["Saffron", "Cream", "Ash Blue"],
                 sizes: ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL"],
                 status: "active"
             }
@@ -2549,8 +2582,23 @@ h1,h2,h3,.section-title,.hero-title,.newsletter-title,.modal-title{font-family:v
             return fallback;
         }
 
+
+        function normalizeImages(data, fallbackImage) {
+            const candidates = [];
+            if (Array.isArray(data.images)) candidates.push(...data.images);
+            if (Array.isArray(data.gallery)) candidates.push(...data.gallery);
+            [data.image1Url, data.image2Url, data.image3Url, data.imageUrl, data.image].forEach(url => {
+                if (url) candidates.push(url);
+            });
+            const clean = candidates.map(url => String(url || "").trim()).filter(Boolean);
+            const unique = [...new Set(clean)];
+            return unique.length ? unique.slice(0, 3) : [fallbackImage];
+        }
+
         function normalizeProduct(docId, data) {
-            const image = data.imageUrl || data.image || "https://dummyimage.com/600x800/f8f1e9/3a271f&text=VELOURA";
+            const fallbackImage = "https://dummyimage.com/600x800/f8f1e9/3a271f&text=VELOURA";
+            const gallery = normalizeImages(data, fallbackImage);
+            const image = gallery[0];
             const salePrice = Number(data.salePrice ?? data.price ?? 0);
             const originalPrice = Number(data.originalPrice ?? data.oriPrice ?? data.price ?? 0);
 
@@ -2562,12 +2610,7 @@ h1,h2,h3,.section-title,.hero-title,.newsletter-title,.modal-title{font-family:v
                 salePrice,
                 price: salePrice,
                 image,
-                gallery: safeArray(data.gallery, [
-                    image,
-                    "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?q=80&w=1000&auto=format&fit=crop",
-                    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1000&auto=format&fit=crop"
-                ]),
-                colors: safeArray(data.colors, ["Rose", "Cream", "Ash Blue", "Mocha", "Black"]),
+                gallery,
                 sizes: safeArray(data.sizes, ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL"]),
                 status: data.status || "active",
                 description: data.description || "Premium limited-edition linen modestwear, thoughtfully designed and locally made in Malaysia.",
@@ -2630,22 +2673,20 @@ h1,h2,h3,.section-title,.hero-title,.newsletter-title,.modal-title{font-family:v
             `).join('');
         }
 
-        function addToCart(productId, customSize = null, customColor = null) {
+        function addToCart(productId, customSize = null) {
             const product = products.find(item => item.id === productId);
             if (!product) return;
 
             const sizeInput = document.getElementById(`size-${productId}`);
-            const colorInput = document.getElementById(`color-${productId}`);
-
             const size = customSize || (sizeInput ? sizeInput.value : product.sizes[0]);
-            const color = customColor || (colorInput ? colorInput.value : product.colors[0]);
-            const key = `${productId}-${size}-${color}`;
+            const key = `${productId}-${size}`;
             const existing = cart.find(item => item.key === key);
 
             if (existing) {
                 existing.qty += 1;
             } else {
-                cart.push({ ...product, key, productId, size, color, qty: 1 });
+                const { colors, ...cartProduct } = product;
+                cart.push({ ...cartProduct, key, productId, size, qty: 1 });
             }
 
             saveCart();
@@ -2684,7 +2725,7 @@ h1,h2,h3,.section-title,.hero-title,.newsletter-title,.modal-title{font-family:v
                     <img src="${item.image}" alt="${item.name}" class="cart-item-img">
                     <div>
                         <div class="cart-item-title">${item.name}</div>
-                        <div class="cart-item-meta">Size: ${item.size} · Colour: ${item.color} · Qty: ${item.qty}</div>
+                        <div class="cart-item-meta">Size: ${item.size} · Qty: ${item.qty}</div>
                         <div class="cart-item-footer">
                             <span class="cart-item-price">RM ${Number(item.salePrice || item.price || 0) * item.qty}</span>
                             <button class="cart-item-remove" onclick="removeFromCart('${item.key}')">Remove</button>
@@ -2724,21 +2765,18 @@ h1,h2,h3,.section-title,.hero-title,.newsletter-title,.modal-title{font-family:v
             currentSlide = 0;
 
             selectedSize = currentProduct.sizes[0] || "";
-            selectedColor = currentProduct.colors[0] || "";
 
             document.getElementById('modalCategory').textContent = currentProduct.category;
             document.getElementById('modalTitle').textContent = currentProduct.name;
             document.getElementById('modalSale').textContent = `RM ${currentProduct.salePrice}`;
             document.getElementById('modalOriginal').textContent = currentProduct.originalPrice && currentProduct.originalPrice > currentProduct.salePrice ? `RM ${currentProduct.originalPrice}` : "";
-            document.getElementById('modalImage').src = currentProduct.gallery[currentSlide];
+            document.getElementById('modalImage').src = currentProduct.gallery[currentSlide] || currentProduct.image;
+            renderModalThumbnails();
 
             document.getElementById('modalSizeButtons').innerHTML = currentProduct.sizes.map((size, index) => `
                 <button type="button" class="size-btn ${index === 0 ? 'active' : ''}" onclick="selectModalSize(this, '${size}')">${size}</button>
             `).join('');
 
-            document.getElementById('modalColorButtons').innerHTML = currentProduct.colors.map((color, index) => `
-                <button type="button" class="color-btn ${index === 0 ? 'active' : ''}" onclick="selectModalColor(this, '${color}')">${color}</button>
-            `).join('');
 
             const modalDesc = document.querySelector('.modal-desc');
             const description = currentProduct.description || "Crafted from premium high-density pure linen with visible slub texture, confident opacity and feminine modest detailing.";
@@ -2767,8 +2805,33 @@ h1,h2,h3,.section-title,.hero-title,.newsletter-title,.modal-title{font-family:v
             if (currentSlide < 0) currentSlide = currentProduct.gallery.length - 1;
             if (currentSlide >= currentProduct.gallery.length) currentSlide = 0;
 
-            document.getElementById('modalImage').src = currentProduct.gallery[currentSlide];
+            document.getElementById('modalImage').src = currentProduct.gallery[currentSlide] || currentProduct.image;
+            updateModalThumbnailState();
         }
+
+        function renderModalThumbnails() {
+            const container = document.getElementById('modalThumbnails');
+            if (!container || !currentProduct) return;
+            const images = currentProduct.gallery && currentProduct.gallery.length ? currentProduct.gallery : [currentProduct.image];
+            container.innerHTML = images.slice(0, 3).map((img, index) => `
+                <button type="button" class="product-thumb-btn ${index === currentSlide ? 'active' : ''}" onclick="selectModalImage(${index})">
+                    <img src="${img}" alt="${currentProduct.name} image ${index + 1}">
+                </button>
+            `).join('');
+        }
+
+        function updateModalThumbnailState() {
+            document.querySelectorAll('.product-thumb-btn').forEach((btn, index) => {
+                btn.classList.toggle('active', index === currentSlide);
+            });
+        }
+
+        window.selectModalImage = function(index) {
+            if (!currentProduct || !currentProduct.gallery || !currentProduct.gallery[index]) return;
+            currentSlide = index;
+            document.getElementById('modalImage').src = currentProduct.gallery[currentSlide];
+            updateModalThumbnailState();
+        };
 
         function checkout() {
             if (cart.length === 0) {
@@ -2816,9 +2879,8 @@ h1,h2,h3,.section-title,.hero-title,.newsletter-title,.modal-title{font-family:v
         document.getElementById('modalAddToCart').addEventListener('click', () => {
             if (!currentProduct) return;
             const size = selectedSize || currentProduct.sizes[0];
-            const color = selectedColor || currentProduct.colors[0];
             closeProductModal();
-            addToCart(currentProduct.id, size, color);
+            addToCart(currentProduct.id, size);
         });
 
         checkoutBtn.addEventListener('click', checkout);
@@ -2840,11 +2902,6 @@ h1,h2,h3,.section-title,.hero-title,.newsletter-title,.modal-title{font-family:v
             selectedSize = size;
         };
 
-        window.selectModalColor = function(button, color) {
-            document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-            selectedColor = color;
-        };
 
         window.addToCart = addToCart;
         window.removeFromCart = removeFromCart;

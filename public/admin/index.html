@@ -54,7 +54,7 @@
     .modal-close{background:#FFF1F7;color:#ED337F}
     .edit-form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
     .edit-form-grid textarea,.edit-form-grid .full{grid-column:1/-1}
-    .image-preview{width:120px;height:150px;object-fit:cover;border-radius:12px;background:#FFF1F7;border:1px solid #F4D7E5;margin-top:8px}
+    .image-preview{width:120px;height:150px;object-fit:cover;border-radius:12px;background:#FFF1F7;border:1px solid #F4D7E5;margin-top:8px}.image-preview-row{display:flex;gap:10px;flex-wrap:wrap}.image-preview-row img{width:90px;height:115px;object-fit:cover;border-radius:10px;background:#FFF1F7;border:1px solid #F4D7E5}
     @media(max-width:1000px){.filters{grid-template-columns:1fr 1fr 1fr}}
     @media(max-width:800px){.filters{grid-template-columns:1fr}.orders-toolbar{align-items:flex-start;flex-direction:column}}
     .notice{background:#fff3cd;border:1px solid #ffe08a;color:#5c3a1e;border-radius:12px;padding:12px;margin-bottom:16px;display:none}
@@ -241,11 +241,19 @@
           </select>
         </div>
         <div class="full">
-          <label>Image URL</label>
-          <input id="editImageUrl" placeholder="Current or external image URL">
+          <label>Image 1 URL</label>
+          <input id="editImage1Url" placeholder="Main product image URL">
         </div>
         <div class="full">
-          <img id="editImagePreview" class="image-preview" alt="Product preview" style="display:none">
+          <label>Image 2 URL</label>
+          <input id="editImage2Url" placeholder="Second product image URL">
+        </div>
+        <div class="full">
+          <label>Image 3 URL</label>
+          <input id="editImage3Url" placeholder="Third product image URL">
+        </div>
+        <div class="full">
+          <div id="editImagePreviewRow" class="image-preview-row"></div>
         </div>
         <div class="full">
           <label>Description</label>
@@ -321,6 +329,34 @@ async function readCollections(names){
   return all;
 }
 
+
+function productImages(product){
+  const images = [];
+  if (Array.isArray(product.images)) images.push(...product.images);
+  if (Array.isArray(product.gallery)) images.push(...product.gallery);
+  [product.image1Url, product.image2Url, product.image3Url, product.imageUrl, product.image].forEach(url => {
+    if (url) images.push(url);
+  });
+  const clean = images.map(url => String(url || "").trim()).filter(Boolean);
+  return [...new Set(clean)].slice(0, 3);
+}
+
+function firstProductImage(product){
+  return productImages(product)[0] || "";
+}
+
+function renderImagePreviews(){
+  const row = document.getElementById("editImagePreviewRow");
+  if (!row) return;
+  const urls = ["editImage1Url", "editImage2Url", "editImage3Url"]
+    .map(id => document.getElementById(id)?.value.trim())
+    .filter(Boolean);
+
+  row.innerHTML = urls.length
+    ? urls.map((url, index) => `<img src="${url}" alt="Product image ${index + 1}">`).join("")
+    : `<span class="small">No image preview</span>`;
+}
+
 async function loadProducts(){
   products = await readCollections(["Products", "products"]);
 
@@ -331,7 +367,7 @@ async function loadProducts(){
       <td>
         <strong>${p.name || "-"}</strong><br>
         <span class="small">${p.category || "-"}<br>Collection: ${p._collection}</span>
-        ${p.imageUrl ? `<img class="product-thumb" src="${p.imageUrl}" alt="${p.name || 'Product'}">` : ``}
+        ${firstProductImage(p) ? `<img class="product-thumb" src="${firstProductImage(p)}" alt="${p.name || 'Product'}">` : ``}
       </td>
       <td>RM ${p.price || 0}<br><span class="small">Ori: RM ${p.oriPrice || "-"}</span></td>
       <td>${p.stock ?? "-"}</td>
@@ -741,7 +777,7 @@ function renderItems(items){
     const qty = Number(i.qty || i.quantity || 1);
     const price = Number(i.price || i.unitPrice || 0);
     const subtotal = Number(i.subtotal || (price * qty));
-    return `${i.name || "Item"} × ${qty}<br><span class="small">${i.size || ""} ${i.color || ""} · RM ${subtotal.toFixed(2)}</span>`;
+    return `${i.name || "Item"} × ${qty}<br><span class="small">Size: ${i.size || "-"} · RM ${subtotal.toFixed(2)}</span>`;
   }).join("<br><br>");
 }
 
@@ -764,16 +800,12 @@ window.openEditProductModal = function(id){
   document.getElementById("editOriPrice").value = product.oriPrice ?? "";
   document.getElementById("editStock").value = product.stock ?? 0;
   document.getElementById("editStatus").value = product.status || "active";
-  document.getElementById("editImageUrl").value = product.imageUrl || "";
+  const images = productImages(product);
+  document.getElementById("editImage1Url").value = images[0] || "";
+  document.getElementById("editImage2Url").value = images[1] || "";
+  document.getElementById("editImage3Url").value = images[2] || "";
   document.getElementById("editDescription").value = product.description || "";
-  const preview = document.getElementById("editImagePreview");
-  if (product.imageUrl) {
-    preview.src = product.imageUrl;
-    preview.style.display = "block";
-  } else {
-    preview.removeAttribute("src");
-    preview.style.display = "none";
-  }
+  renderImagePreviews();
 
   document.getElementById("editProductModal").classList.add("active");
   document.getElementById("editProductModal").setAttribute("aria-hidden", "false");
@@ -784,16 +816,8 @@ window.closeEditProductModal = function(){
   document.getElementById("editProductModal").setAttribute("aria-hidden", "true");
 };
 
-document.getElementById("editImageUrl").addEventListener("input", (event) => {
-  const preview = document.getElementById("editImagePreview");
-  const url = event.target.value.trim();
-  if (url) {
-    preview.src = url;
-    preview.style.display = "block";
-  } else {
-    preview.removeAttribute("src");
-    preview.style.display = "none";
-  }
+["editImage1Url", "editImage2Url", "editImage3Url"].forEach(id => {
+  document.getElementById(id)?.addEventListener("input", renderImagePreviews);
 });
 
 document.getElementById("editProductForm").addEventListener("submit", async (e) => {
@@ -818,7 +842,24 @@ document.getElementById("editProductForm").addEventListener("submit", async (e) 
       oriPrice: Number(document.getElementById("editOriPrice").value || 0),
       stock: stockValue,
       status: stockValue <= 0 ? "sold_out" : selectedStatus,
-      imageUrl: document.getElementById("editImageUrl").value.trim(),
+      imageUrl: [
+        document.getElementById("editImage1Url").value.trim(),
+        document.getElementById("editImage2Url").value.trim(),
+        document.getElementById("editImage3Url").value.trim()
+      ].filter(Boolean)[0] || "",
+      image1Url: document.getElementById("editImage1Url").value.trim(),
+      image2Url: document.getElementById("editImage2Url").value.trim(),
+      image3Url: document.getElementById("editImage3Url").value.trim(),
+      images: [
+        document.getElementById("editImage1Url").value.trim(),
+        document.getElementById("editImage2Url").value.trim(),
+        document.getElementById("editImage3Url").value.trim()
+      ].filter(Boolean),
+      gallery: [
+        document.getElementById("editImage1Url").value.trim(),
+        document.getElementById("editImage2Url").value.trim(),
+        document.getElementById("editImage3Url").value.trim()
+      ].filter(Boolean),
       description: document.getElementById("editDescription").value.trim(),
       updatedAt: serverTimestamp()
     };
