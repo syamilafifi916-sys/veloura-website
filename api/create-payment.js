@@ -103,7 +103,7 @@ export default async function handler(req, res) {
     });
 
     const returnUrl =
-`${process.env.SITE_URL}/payment-status.html?order=${encodeURIComponent(orderNumber)}&id=${orderRef.id}`;
+  `${process.env.SITE_URL}/payment-status.html?order=${encodeURIComponent(orderNumber)}&id=${orderRef.id}`;
 
     const metadata = JSON.stringify({
       orderId: orderRef.id,
@@ -122,7 +122,7 @@ export default async function handler(req, res) {
       payer_bank_name: customer.bankName || "",
       metadata,
       return_url: returnUrl,
-      callback_url: `${process.env.SITE_URL}/api/bayarcash-callback?orderId=${orderRef.id}`,
+callback_url: `${process.env.SITE_URL}/api/bayarcash-callback?orderId=${orderRef.id}`,
       platform_id: process.env.BAYARCASH_PLATFORM_ID || "veloura"
     };
 
