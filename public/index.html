@@ -2516,6 +2516,18 @@ html body .footer-grid .footer-brand-logo-img{
   width: auto !important;
 }
 </style>
+<style id="product-card-straight-edges">
+/* Force straight edges on product cards (beats #collection ID-level rule) */
+#collection .product-card,
+#collection .product-card.catalog-clean,
+#collection .product-card.catalog-clean .product-img,
+#collection .product-card.catalog-clean img,
+#collection .product-card.catalog-clean .product-badge,
+html body #collection .product-card.catalog-clean,
+html body #collection .product-card.catalog-clean .product-img{
+  border-radius: 0 !important;
+}
+</style>
 </head>
 <body>
     <div class="announcement-bar">
