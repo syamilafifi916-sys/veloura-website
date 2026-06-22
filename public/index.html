@@ -2029,31 +2029,23 @@ body{
 }
 
 
-/* Description & Good To Know - Same Font Size */
+/* ChatGPT update: Description wider, Good To Know narrower, consistent font sizing */
 .modal-tabs{
-    gap:50px !important;
+    gap:32px !important;
 }
 .modal-tab:first-child{
-    flex:1.35 !important;
+    flex:1.6 !important;
 }
 .modal-tab:last-child{
-    flex:1.15 !important;
+    flex:0.9 !important;
 }
-.modal-tab p{
-    font-size:18px !important;
-    line-height:1.8 !important;
-    color:var(--text-light) !important;
-}
+.modal-tab p,
 .good-to-know-list{
-    font-size:18px !important;
-    line-height:1.8 !important;
-    color:var(--text-light) !important;
-    padding-left:24px !important;
+    font-size:.96rem !important;
+    line-height:1.7 !important;
 }
 .good-to-know-list li{
-    font-size:18px !important;
-    line-height:1.8 !important;
-    margin-bottom:12px !important;
+    margin-bottom:8px !important;
 }
 
 </style>
@@ -2726,6 +2718,70 @@ html body #productModal #modalAddToCart{
   letter-spacing: .2em !important;
 }
 </style>
+
+<style id="modal-description-goodtoknow-final-fix">
+/* FINAL FIX: Description and Good To Know same font size + cleaner two-column layout */
+#productModal .modal-tabs{
+    display:grid !important;
+    grid-template-columns:1fr 1fr !important;
+    gap:48px !important;
+    align-items:flex-start !important;
+}
+
+#productModal .modal-tab{
+    width:100% !important;
+    flex:none !important;
+}
+
+#productModal .modal-tab p,
+#productModal .modal-tab ul,
+#productModal .modal-tab li,
+#productModal #modalDescription,
+#productModal #modalGoodToKnow,
+#productModal #modalGoodToKnow li,
+#productModal .good-to-know-list,
+#productModal .good-to-know-list li{
+    font-size:16px !important;
+    line-height:1.75 !important;
+    font-family:var(--font-body) !important;
+    font-weight:300 !important;
+    color:var(--text-light) !important;
+    letter-spacing:.01em !important;
+}
+
+#productModal .good-to-know-list,
+#productModal #modalGoodToKnow{
+    margin:0 !important;
+    padding-left:22px !important;
+    list-style-position:outside !important;
+}
+
+#productModal .good-to-know-list li,
+#productModal #modalGoodToKnow li{
+    margin:0 0 10px !important;
+    padding-left:4px !important;
+}
+
+@media(max-width:767px){
+    #productModal .modal-tabs{
+        grid-template-columns:1fr !important;
+        gap:24px !important;
+    }
+
+    #productModal .modal-tab p,
+    #productModal .modal-tab ul,
+    #productModal .modal-tab li,
+    #productModal #modalDescription,
+    #productModal #modalGoodToKnow,
+    #productModal #modalGoodToKnow li,
+    #productModal .good-to-know-list,
+    #productModal .good-to-know-list li{
+        font-size:15px !important;
+        line-height:1.7 !important;
+    }
+}
+</style>
+
 </head>
 <body>
     <div class="announcement-bar">
