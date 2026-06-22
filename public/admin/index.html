@@ -77,9 +77,6 @@
     .subscriber-search{max-width:360px;margin-bottom:14px}
     @media(max-width:800px){.grid,.analytics-grid,.form-grid{grid-template-columns:1fr}table{font-size:12px}}
 
-    /* Final admin update: Good To Know field removed from client admin */
-    #editGoodToKnow{display:none!important;}
-
   </style>
 </head>
 
@@ -280,13 +277,8 @@
         </div>
         <div class="full">
           <label>Description</label>
-          <textarea id="editDescription" rows="10" placeholder="[HEADING] GOOD TO KNOW
-• 70% Linen, 30% Cotton blend
-• Breathable, lightweight & soft drape
-
-[HEADING] GARMENT CARE
-Hand wash in cold water">Effortless elegance in a breathable linen cotton blend.</textarea>
-          <div class="helper-text">Use [HEADING] before a title to make it bold. Example: [HEADING] GARMENT CARE. Start a line with •, - or . for bullet points.</div>
+          <textarea id="editDescription" placeholder="Product description">Effortless elegance in a breathable linen cotton blend.</textarea>
+          <div class="helper-text">This appears under the Description tab.</div>
         </div>
       </div>
 
@@ -836,7 +828,12 @@ window.openEditProductModal = function(id){
   document.getElementById("editImage3Url").value = images[2] || "";
   document.getElementById("editCaption").value = product.caption || product.shortDescription || DEFAULT_PRODUCT_CAPTION;
   document.getElementById("editDescription").value = product.description || DEFAULT_PRODUCT_DESCRIPTION;
-  document.getElementById("editGoodToKnow").value = product.goodToKnow || product.good_to_know || DEFAULT_PRODUCT_GOOD_TO_KNOW;
+
+  const goodToKnowField = document.getElementById("editGoodToKnow");
+  if (goodToKnowField) {
+    goodToKnowField.value = product.goodToKnow || product.good_to_know || DEFAULT_PRODUCT_GOOD_TO_KNOW;
+  }
+
   renderImagePreviews();
 
   document.getElementById("editProductModal").classList.add("active");
@@ -892,7 +889,6 @@ document.getElementById("editProductForm").addEventListener("submit", async (e) 
       caption: document.getElementById("editCaption").value.trim() || DEFAULT_PRODUCT_CAPTION,
       shortDescription: document.getElementById("editCaption").value.trim() || DEFAULT_PRODUCT_CAPTION,
       description: document.getElementById("editDescription").value.trim() || DEFAULT_PRODUCT_DESCRIPTION,
-      goodToKnow: document.getElementById("editGoodToKnow").value.trim() || DEFAULT_PRODUCT_GOOD_TO_KNOW,
       updatedAt: serverTimestamp()
     };
 
