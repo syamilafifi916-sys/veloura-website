@@ -2011,6 +2011,18 @@ body{
 }
 
 
+
+/* GOOD TO KNOW BULLET LIST - editable from Admin textarea */
+.good-to-know-list{
+    margin:0;
+    padding-left:18px;
+    color:var(--text-light);
+    line-height:1.8;
+}
+.good-to-know-list li{
+    margin-bottom:6px;
+}
+
 /* HIDE PRODUCT CATEGORY IN POPUP MODAL - client requested */
 #productModal #modalCategory{
   display:none !important;
@@ -3208,7 +3220,7 @@ html body #productModal #modalAddToCart{
 
                 <div class="modal-tabs">
                     <div class="modal-tab"><strong>Description</strong><p id="modalDescriptionText">Premium limited-edition linen modestwear, thoughtfully designed and locally made in Malaysia.</p></div>
-                    <div class="modal-tab"><strong>Good To Know</strong><p id="modalGoodToKnowText">100% premium linen, inclusive sizing from XS to 4XL, and produced in limited quantities. Pre-order timeline is approximately 2–4 weeks before dispatch.</p></div>
+                    <div class="modal-tab"><strong>Good To Know</strong><ul id="modalGoodToKnowText" class="good-to-know-list"><li>100% premium linen cotton blend</li><li>Breathable and lightweight fabric</li><li>Inclusive sizing from XS to 4XL</li><li>Limited production quantities</li><li>Pre-order timeline 2–4 weeks</li></ul></div>
                 </div>
             </div>
         </div>
@@ -3511,11 +3523,25 @@ html body #productModal #modalAddToCart{
             const caption = currentProduct.caption || DEFAULT_PRODUCT_CAPTION;
             const description = currentProduct.description || DEFAULT_PRODUCT_DESCRIPTION;
             const goodToKnow = currentProduct.goodToKnow || DEFAULT_PRODUCT_GOOD_TO_KNOW;
+            const escapeHtml = (value) => String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
             if (modalDesc) modalDesc.textContent = caption;
             const descriptionText = document.getElementById('modalDescriptionText');
-            if (descriptionText) descriptionText.textContent = description;
+            if (descriptionText) descriptionText.innerHTML = escapeHtml(description).replace(/\n/g, '<br>');
             const goodToKnowText = document.getElementById('modalGoodToKnowText');
-            if (goodToKnowText) goodToKnowText.textContent = goodToKnow;
+            if (goodToKnowText) {
+                const lines = String(goodToKnow || '')
+                    .split('\n')
+                    .map(line => line.trim())
+                    .filter(Boolean);
+                goodToKnowText.innerHTML = lines.length
+                    ? lines.map(line => `<li>${escapeHtml(line)}</li>`).join('')
+                    : `<li>${escapeHtml(DEFAULT_PRODUCT_GOOD_TO_KNOW)}</li>`;
+            }
 
             const stockNote = document.getElementById('modalStockNote');
             if (stockNote) stockNote.innerHTML = "<strong>Model's sizing:</strong>Lunia is 160cm | 50KG | Bust 33inch | Waist 27inch | Hip 38inch | Wear S.";

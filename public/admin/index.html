@@ -281,8 +281,12 @@
         </div>
         <div class="full">
           <label>Good To Know</label>
-          <textarea id="editGoodToKnow" placeholder="Good to know details">100% premium linen, inclusive sizing from XS to 4XL, and produced in limited quantities. Pre-order timeline is approximately 2–4 weeks before dispatch.</textarea>
-          <div class="helper-text">This appears under the Good To Know tab.</div>
+          <textarea id="editGoodToKnow" rows="6" placeholder="One point per line">100% premium linen cotton blend
+Breathable and lightweight fabric
+Inclusive sizing from XS to 4XL
+Limited production quantities
+Pre-order timeline 2–4 weeks</textarea>
+          <div class="helper-text">One point per line. Each line will appear as a bullet point under the Good To Know tab.</div>
         </div>
       </div>
 
@@ -319,7 +323,7 @@ let currentSubscribersPage = 1;
 const subscribersPerPage = 10;
 const DEFAULT_PRODUCT_CAPTION = "Effortless elegance in a breathable linen cotton blend.";
 const DEFAULT_PRODUCT_DESCRIPTION = "Effortless elegance in a breathable linen cotton blend.";
-const DEFAULT_PRODUCT_GOOD_TO_KNOW = "100% premium linen, inclusive sizing from XS to 4XL, and produced in limited quantities. Pre-order timeline is approximately 2–4 weeks before dispatch.";
+const DEFAULT_PRODUCT_GOOD_TO_KNOW = "100% premium linen cotton blend\nBreathable and lightweight fabric\nInclusive sizing from XS to 4XL\nLimited production quantities\nPre-order timeline 2–4 weeks";
 
 onAuthStateChanged(auth, (user) => {
   if (!user) window.location.href = "admin-login.html";
