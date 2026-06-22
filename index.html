@@ -2029,23 +2029,31 @@ body{
 }
 
 
-/* ChatGPT update: Description wider, Good To Know narrower, consistent font sizing */
+/* Description & Good To Know - Same Font Size */
 .modal-tabs{
-    gap:32px !important;
+    gap:50px !important;
 }
 .modal-tab:first-child{
-    flex:1.6 !important;
+    flex:1.35 !important;
 }
 .modal-tab:last-child{
-    flex:0.9 !important;
+    flex:1.15 !important;
 }
-.modal-tab p,
+.modal-tab p{
+    font-size:18px !important;
+    line-height:1.8 !important;
+    color:var(--text-light) !important;
+}
 .good-to-know-list{
-    font-size:.96rem !important;
-    line-height:1.7 !important;
+    font-size:18px !important;
+    line-height:1.8 !important;
+    color:var(--text-light) !important;
+    padding-left:24px !important;
 }
 .good-to-know-list li{
-    margin-bottom:8px !important;
+    font-size:18px !important;
+    line-height:1.8 !important;
+    margin-bottom:12px !important;
 }
 
 </style>
