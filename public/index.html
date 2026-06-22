@@ -2719,6 +2719,150 @@ html body #productModal #modalAddToCart{
 }
 </style>
 
+<style id="modal-description-goodtoknow-final-fix">
+/* Description + Good To Know: identical type on both columns, tidy rhythm.
+   Selectors are prefixed `html body` + real element IDs so they out-specify
+   the earlier per-element patches (esp. `html body #productModal .modal-tab p`)
+   that were forcing the left column smaller than the bullets. */
+html body #productModal .modal-tabs{
+    display:grid !important;
+    grid-template-columns:1fr 1fr !important;
+    gap:44px !important;
+    align-items:start !important;
+}
+
+html body #productModal .modal-tab{
+    width:100% !important;
+    flex:none !important;
+    min-width:0 !important;
+}
+
+/* one shared body type for BOTH columns */
+html body #productModal .modal-tab p,
+html body #productModal .modal-tab ul,
+html body #productModal .modal-tab li,
+html body #productModal #modalDescription,
+html body #productModal #modalDescriptionText,
+html body #productModal #modalGoodToKnow,
+html body #productModal #modalGoodToKnow li,
+html body #productModal #modalGoodToKnowText,
+html body #productModal #modalGoodToKnowText li,
+html body #productModal .good-to-know-list,
+html body #productModal .good-to-know-list li{
+    font-size:15px !important;
+    line-height:1.6 !important;
+    font-family:var(--font-body) !important;
+    font-weight:300 !important;
+    color:var(--text-light) !important;
+    letter-spacing:.01em !important;
+}
+
+html body #productModal .good-to-know-list,
+html body #productModal #modalGoodToKnow,
+html body #productModal #modalGoodToKnowText{
+    margin:0 !important;
+    padding-left:20px !important;
+    list-style-position:outside !important;
+}
+
+html body #productModal .good-to-know-list li,
+html body #productModal #modalGoodToKnow li,
+html body #productModal #modalGoodToKnowText li{
+    margin:0 0 8px !important;
+    padding-left:4px !important;
+}
+
+html body #productModal .good-to-know-list li:last-child,
+html body #productModal #modalGoodToKnow li:last-child,
+html body #productModal #modalGoodToKnowText li:last-child{
+    margin-bottom:0 !important;
+}
+
+@media(max-width:767px){
+    html body #productModal .modal-tabs{
+        grid-template-columns:1fr !important;
+        gap:26px !important;
+    }
+
+    html body #productModal .modal-tab p,
+    html body #productModal .modal-tab ul,
+    html body #productModal .modal-tab li,
+    html body #productModal #modalDescription,
+    html body #productModal #modalDescriptionText,
+    html body #productModal #modalGoodToKnow,
+    html body #productModal #modalGoodToKnow li,
+    html body #productModal #modalGoodToKnowText,
+    html body #productModal #modalGoodToKnowText li,
+    html body #productModal .good-to-know-list,
+    html body #productModal .good-to-know-list li{
+        font-size:14.5px !important;
+        line-height:1.58 !important;
+    }
+}
+</style>
+
+
+<style id="veloura-description-formatting">
+/* Auto-format product description content from Admin:
+   [HEADING] Title => styled heading
+   normal lines => paragraph text
+   bullet lines starting with •, -, or . => clean bullets
+*/
+#productModal .veloura-description-content{
+    font-size:17px !important;
+    line-height:1.8 !important;
+    color:var(--text-light) !important;
+    font-family:var(--font-body) !important;
+    font-weight:300 !important;
+    letter-spacing:.01em !important;
+}
+
+#productModal .veloura-description-content .desc-heading{
+    display:block !important;
+    margin:22px 0 8px !important;
+    color:var(--text-dark) !important;
+    font-size:14px !important;
+    line-height:1.4 !important;
+    font-weight:500 !important;
+    letter-spacing:.18em !important;
+    text-transform:uppercase !important;
+}
+
+#productModal .veloura-description-content .desc-heading:first-child{
+    margin-top:0 !important;
+}
+
+#productModal .veloura-description-content .desc-line{
+    margin:0 0 6px !important;
+}
+
+#productModal .veloura-description-content .desc-bullet{
+    position:relative !important;
+    margin:0 0 6px 0 !important;
+    padding-left:18px !important;
+}
+
+#productModal .veloura-description-content .desc-bullet::before{
+    content:"•" !important;
+    position:absolute !important;
+    left:0 !important;
+    top:0 !important;
+    color:var(--text-light) !important;
+}
+
+@media(max-width:767px){
+    #productModal .veloura-description-content{
+        font-size:15px !important;
+        line-height:1.75 !important;
+    }
+
+    #productModal .veloura-description-content .desc-heading{
+        font-size:13px !important;
+        margin:18px 0 7px !important;
+    }
+}
+</style>
+
 
 <style id="veloura-single-description-final">
 /* Final product popup: single Description column only */
@@ -2738,29 +2882,6 @@ html body #productModal #modalAddToCart{
 
 #productModal .modal-tab:nth-child(2){
     display:none !important;
-}
-
-#productModal #modalDescription,
-#productModal .modal-tab p{
-    font-size:17px !important;
-    line-height:1.8 !important;
-    color:var(--text-light) !important;
-    font-family:var(--font-body) !important;
-    font-weight:300 !important;
-    letter-spacing:.01em !important;
-}
-
-@media(max-width:767px){
-    #productModal .modal-tabs{
-        padding-top:22px !important;
-        margin-top:20px !important;
-    }
-
-    #productModal #modalDescription,
-    #productModal .modal-tab p{
-        font-size:15px !important;
-        line-height:1.75 !important;
-    }
 }
 </style>
 
@@ -3566,7 +3687,41 @@ html body #productModal #modalAddToCart{
             }
         }
 
-        function openProductModal(productId) {
+        
+function escapeVelouraHtml(value){
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function formatVelouraDescription(rawText){
+  const lines = String(rawText || "")
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .split("\n");
+
+  return lines.map(line => {
+    const original = line || "";
+    const trimmed = original.trim();
+
+    if (!trimmed) return "";
+
+    if (/^\[HEADING\]\s*/i.test(trimmed)) {
+      return `<div class="desc-heading">${escapeVelouraHtml(trimmed.replace(/^\[HEADING\]\s*/i, ""))}</div>`;
+    }
+
+    if (/^(•|-|\.)\s*/.test(trimmed)) {
+      return `<div class="desc-bullet">${escapeVelouraHtml(trimmed.replace(/^(•|-|\.)\s*/, ""))}</div>`;
+    }
+
+    return `<div class="desc-line">${escapeVelouraHtml(trimmed)}</div>`;
+  }).join("");
+}
+
+function openProductModal(productId) {
             currentProduct = products.find(item => item.id === productId);
             if (!currentProduct) return;
             currentSlide = 0;
