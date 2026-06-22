@@ -57,6 +57,7 @@
     .edit-btn{background:#FFF1F7;color:#ED337F}
     .product-thumb{width:64px;height:82px;object-fit:cover;border-radius:10px;background:#FFF1F7;margin-top:8px;border:1px solid #F4D7E5}
     .model-sizing-note{background:#FFF1F7;border:1px solid #F4D7E5;border-radius:10px;padding:10px 12px;color:#5A4A3A;font-size:12px;line-height:1.5;font-weight:600}
+    .helper-text{font-size:12px;color:#8C7C6C;margin-top:6px;line-height:1.4}
     .modal-overlay{position:fixed;inset:0;background:rgba(43,30,34,.45);z-index:9998;display:none;align-items:flex-start;justify-content:center;padding:32px 14px;overflow:auto}
     .modal-overlay.active{display:flex}
     .modal-card{width:min(760px,100%);background:#fff;border-radius:18px;border:1px solid #F4D7E5;box-shadow:0 18px 60px rgba(44,24,16,.22);padding:22px}
@@ -269,8 +270,19 @@
           <div id="editImagePreviewRow" class="image-preview-row"></div>
         </div>
         <div class="full">
+          <label>Popup Caption</label>
+          <textarea id="editCaption" placeholder="Short caption below price">Effortless elegance in a breathable linen cotton blend.</textarea>
+          <div class="helper-text">This appears under the product price in the popup.</div>
+        </div>
+        <div class="full">
           <label>Description</label>
-          <textarea id="editDescription" placeholder="Product description"></textarea>
+          <textarea id="editDescription" placeholder="Product description">Effortless elegance in a breathable linen cotton blend.</textarea>
+          <div class="helper-text">This appears under the Description tab.</div>
+        </div>
+        <div class="full">
+          <label>Good To Know</label>
+          <textarea id="editGoodToKnow" placeholder="Good to know details">100% premium linen, inclusive sizing from XS to 4XL, and produced in limited quantities. Pre-order timeline is approximately 2–4 weeks before dispatch.</textarea>
+          <div class="helper-text">This appears under the Good To Know tab.</div>
         </div>
       </div>
 
@@ -305,6 +317,9 @@ let subscribers = [];
 let currentOrdersPage = 1;
 let currentSubscribersPage = 1;
 const subscribersPerPage = 10;
+const DEFAULT_PRODUCT_CAPTION = "Effortless elegance in a breathable linen cotton blend.";
+const DEFAULT_PRODUCT_DESCRIPTION = "Effortless elegance in a breathable linen cotton blend.";
+const DEFAULT_PRODUCT_GOOD_TO_KNOW = "100% premium linen, inclusive sizing from XS to 4XL, and produced in limited quantities. Pre-order timeline is approximately 2–4 weeks before dispatch.";
 
 onAuthStateChanged(auth, (user) => {
   if (!user) window.location.href = "admin-login.html";
@@ -815,7 +830,9 @@ window.openEditProductModal = function(id){
   document.getElementById("editImage1Url").value = images[0] || "";
   document.getElementById("editImage2Url").value = images[1] || "";
   document.getElementById("editImage3Url").value = images[2] || "";
-  document.getElementById("editDescription").value = product.description || "";
+  document.getElementById("editCaption").value = product.caption || product.shortDescription || DEFAULT_PRODUCT_CAPTION;
+  document.getElementById("editDescription").value = product.description || DEFAULT_PRODUCT_DESCRIPTION;
+  document.getElementById("editGoodToKnow").value = product.goodToKnow || product.good_to_know || DEFAULT_PRODUCT_GOOD_TO_KNOW;
   renderImagePreviews();
 
   document.getElementById("editProductModal").classList.add("active");
@@ -868,7 +885,10 @@ document.getElementById("editProductForm").addEventListener("submit", async (e) 
         document.getElementById("editImage2Url").value.trim(),
         document.getElementById("editImage3Url").value.trim()
       ].filter(Boolean),
-      description: document.getElementById("editDescription").value.trim(),
+      caption: document.getElementById("editCaption").value.trim() || DEFAULT_PRODUCT_CAPTION,
+      shortDescription: document.getElementById("editCaption").value.trim() || DEFAULT_PRODUCT_CAPTION,
+      description: document.getElementById("editDescription").value.trim() || DEFAULT_PRODUCT_DESCRIPTION,
+      goodToKnow: document.getElementById("editGoodToKnow").value.trim() || DEFAULT_PRODUCT_GOOD_TO_KNOW,
       updatedAt: serverTimestamp()
     };
 

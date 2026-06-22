@@ -3208,7 +3208,7 @@ html body #productModal #modalAddToCart{
 
                 <div class="modal-tabs">
                     <div class="modal-tab"><strong>Description</strong><p id="modalDescriptionText">Premium limited-edition linen modestwear, thoughtfully designed and locally made in Malaysia.</p></div>
-                    <div class="modal-tab"><strong>Good To Know</strong><p>100% premium linen, inclusive sizing from XS to 4XL, and produced in limited quantities. Pre-order timeline is approximately 2–4 weeks before dispatch.</p></div>
+                    <div class="modal-tab"><strong>Good To Know</strong><p id="modalGoodToKnowText">100% premium linen, inclusive sizing from XS to 4XL, and produced in limited quantities. Pre-order timeline is approximately 2–4 weeks before dispatch.</p></div>
                 </div>
             </div>
         </div>
@@ -3242,6 +3242,10 @@ html body #productModal #modalAddToCart{
         let currentSlide = 0;
         let selectedSize = '';
 
+        const DEFAULT_PRODUCT_CAPTION = "Effortless elegance in a breathable linen cotton blend.";
+        const DEFAULT_PRODUCT_DESCRIPTION = "Effortless elegance in a breathable linen cotton blend.";
+        const DEFAULT_PRODUCT_GOOD_TO_KNOW = "100% premium linen, inclusive sizing from XS to 4XL, and produced in limited quantities. Pre-order timeline is approximately 2–4 weeks before dispatch.";
+
         const FALLBACK_PRODUCTS = [
             {
                 id: "fallback-ivory-luxe",
@@ -3256,6 +3260,9 @@ html body #productModal #modalAddToCart{
                     "https://dummyimage.com/600x800/f8f1e9/3a271f&text=Ivory+Luxe+3"
                 ],
                 sizes: ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL"],
+                caption: DEFAULT_PRODUCT_CAPTION,
+                description: DEFAULT_PRODUCT_DESCRIPTION,
+                goodToKnow: DEFAULT_PRODUCT_GOOD_TO_KNOW,
                 status: "active"
             },
             {
@@ -3271,6 +3278,9 @@ html body #productModal #modalAddToCart{
                     "https://dummyimage.com/600x800/f8f1e9/3a271f&text=Ros%C3%A9+Glow+3"
                 ],
                 sizes: ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL"],
+                caption: DEFAULT_PRODUCT_CAPTION,
+                description: DEFAULT_PRODUCT_DESCRIPTION,
+                goodToKnow: DEFAULT_PRODUCT_GOOD_TO_KNOW,
                 status: "active"
             }
         ];
@@ -3330,7 +3340,9 @@ html body #productModal #modalAddToCart{
                 gallery,
                 sizes: safeArray(data.sizes, ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL"]),
                 status: data.status || "active",
-                description: data.description || "Premium limited-edition linen modestwear, thoughtfully designed and locally made in Malaysia.",
+                caption: data.caption || data.shortDescription || DEFAULT_PRODUCT_CAPTION,
+                description: data.description || DEFAULT_PRODUCT_DESCRIPTION,
+                goodToKnow: data.goodToKnow || data.good_to_know || DEFAULT_PRODUCT_GOOD_TO_KNOW,
                 stock: Number(data.stock ?? 0)
             };
         }
@@ -3496,10 +3508,14 @@ html body #productModal #modalAddToCart{
 
 
             const modalDesc = document.querySelector('.modal-desc');
-            const description = currentProduct.description || "Crafted from premium high-density pure linen with visible slub texture, confident opacity and feminine modest detailing.";
-            if (modalDesc) modalDesc.textContent = description;
+            const caption = currentProduct.caption || DEFAULT_PRODUCT_CAPTION;
+            const description = currentProduct.description || DEFAULT_PRODUCT_DESCRIPTION;
+            const goodToKnow = currentProduct.goodToKnow || DEFAULT_PRODUCT_GOOD_TO_KNOW;
+            if (modalDesc) modalDesc.textContent = caption;
             const descriptionText = document.getElementById('modalDescriptionText');
             if (descriptionText) descriptionText.textContent = description;
+            const goodToKnowText = document.getElementById('modalGoodToKnowText');
+            if (goodToKnowText) goodToKnowText.textContent = goodToKnow;
 
             const stockNote = document.getElementById('modalStockNote');
             if (stockNote) stockNote.innerHTML = "<strong>Model's sizing:</strong>Lunia is 160cm | 50KG | Bust 33inch | Waist 27inch | Hip 38inch | Wear S.";
