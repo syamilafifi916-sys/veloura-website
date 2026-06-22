@@ -76,6 +76,10 @@
     .subscriber-actions{display:flex;gap:10px;flex-wrap:wrap}
     .subscriber-search{max-width:360px;margin-bottom:14px}
     @media(max-width:800px){.grid,.analytics-grid,.form-grid{grid-template-columns:1fr}table{font-size:12px}}
+
+    /* Final admin update: Good To Know field removed from client admin */
+    #editGoodToKnow{display:none!important;}
+
   </style>
 </head>
 
@@ -278,15 +282,6 @@
           <label>Description</label>
           <textarea id="editDescription" placeholder="Product description">Effortless elegance in a breathable linen cotton blend.</textarea>
           <div class="helper-text">This appears under the Description tab.</div>
-        </div>
-        <div class="full">
-          <label>Good To Know</label>
-          <textarea id="editGoodToKnow" rows="6" placeholder="One point per line">100% premium linen cotton blend
-Breathable and lightweight fabric
-Inclusive sizing from XS to 4XL
-Limited production quantities
-Pre-order timeline 2–4 weeks</textarea>
-          <div class="helper-text">One point per line. Each line will appear as a bullet point under the Good To Know tab.</div>
         </div>
       </div>
 

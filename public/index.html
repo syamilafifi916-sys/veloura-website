@@ -2719,84 +2719,47 @@ html body #productModal #modalAddToCart{
 }
 </style>
 
-<style id="modal-description-goodtoknow-final-fix">
-/* Description + Good To Know: identical type on both columns, tidy rhythm.
-   Selectors are prefixed `html body` + real element IDs so they out-specify
-   the earlier per-element patches (esp. `html body #productModal .modal-tab p`)
-   that were forcing the left column smaller than the bullets. */
-html body #productModal .modal-tabs{
-    display:grid !important;
-    grid-template-columns:1fr 1fr !important;
-    gap:44px !important;
-    align-items:start !important;
+
+<style id="veloura-single-description-final">
+/* Final product popup: single Description column only */
+#productModal .modal-tabs{
+    display:block !important;
+    gap:0 !important;
+    border-top:1px solid var(--border) !important;
+    padding-top:28px !important;
+    margin-top:26px !important;
 }
 
-html body #productModal .modal-tab{
+#productModal .modal-tab{
     width:100% !important;
+    max-width:760px !important;
     flex:none !important;
-    min-width:0 !important;
 }
 
-/* one shared body type for BOTH columns */
-html body #productModal .modal-tab p,
-html body #productModal .modal-tab ul,
-html body #productModal .modal-tab li,
-html body #productModal #modalDescription,
-html body #productModal #modalDescriptionText,
-html body #productModal #modalGoodToKnow,
-html body #productModal #modalGoodToKnow li,
-html body #productModal #modalGoodToKnowText,
-html body #productModal #modalGoodToKnowText li,
-html body #productModal .good-to-know-list,
-html body #productModal .good-to-know-list li{
-    font-size:15px !important;
-    line-height:1.6 !important;
+#productModal .modal-tab:nth-child(2){
+    display:none !important;
+}
+
+#productModal #modalDescription,
+#productModal .modal-tab p{
+    font-size:17px !important;
+    line-height:1.8 !important;
+    color:var(--text-light) !important;
     font-family:var(--font-body) !important;
     font-weight:300 !important;
-    color:var(--text-light) !important;
     letter-spacing:.01em !important;
 }
 
-html body #productModal .good-to-know-list,
-html body #productModal #modalGoodToKnow,
-html body #productModal #modalGoodToKnowText{
-    margin:0 !important;
-    padding-left:20px !important;
-    list-style-position:outside !important;
-}
-
-html body #productModal .good-to-know-list li,
-html body #productModal #modalGoodToKnow li,
-html body #productModal #modalGoodToKnowText li{
-    margin:0 0 8px !important;
-    padding-left:4px !important;
-}
-
-html body #productModal .good-to-know-list li:last-child,
-html body #productModal #modalGoodToKnow li:last-child,
-html body #productModal #modalGoodToKnowText li:last-child{
-    margin-bottom:0 !important;
-}
-
 @media(max-width:767px){
-    html body #productModal .modal-tabs{
-        grid-template-columns:1fr !important;
-        gap:26px !important;
+    #productModal .modal-tabs{
+        padding-top:22px !important;
+        margin-top:20px !important;
     }
 
-    html body #productModal .modal-tab p,
-    html body #productModal .modal-tab ul,
-    html body #productModal .modal-tab li,
-    html body #productModal #modalDescription,
-    html body #productModal #modalDescriptionText,
-    html body #productModal #modalGoodToKnow,
-    html body #productModal #modalGoodToKnow li,
-    html body #productModal #modalGoodToKnowText,
-    html body #productModal #modalGoodToKnowText li,
-    html body #productModal .good-to-know-list,
-    html body #productModal .good-to-know-list li{
-        font-size:14.5px !important;
-        line-height:1.58 !important;
+    #productModal #modalDescription,
+    #productModal .modal-tab p{
+        font-size:15px !important;
+        line-height:1.75 !important;
     }
 }
 </style>
