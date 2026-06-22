@@ -1999,6 +1999,12 @@ body{
     }
 }
 
+
+/* HIDE PRODUCT CATEGORY IN POPUP MODAL - client requested */
+#productModal #modalCategory{
+  display:none !important;
+}
+
 </style>
 
 <style id="veloura-reskin">
@@ -3465,7 +3471,7 @@ html body #productModal #modalAddToCart{
 
             selectedSize = currentProduct.sizes[0] || "";
 
-            document.getElementById('modalCategory').textContent = currentProduct.category;
+            document.getElementById('modalCategory').textContent = ''; // Category hidden in product popup
             document.getElementById('modalTitle').textContent = currentProduct.name;
             document.getElementById('modalSale').textContent = `RM ${currentProduct.salePrice}`;
             document.getElementById('modalOriginal').textContent = currentProduct.originalPrice && currentProduct.originalPrice > currentProduct.salePrice ? `RM ${currentProduct.originalPrice}` : "";
