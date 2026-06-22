@@ -985,6 +985,11 @@ img { max-width: 100%; height: auto; display: block; }
             color:var(--text-light);
             margin-top:-12px;
             margin-bottom:18px;
+            line-height:1.55;
+            background:#FFF7EA;
+            border:1px solid var(--border);
+            border-radius:12px;
+            padding:12px 14px;
         }
 
 @media (max-width: 767px) {
@@ -2655,7 +2660,8 @@ html body #productModal .modal-desc{
 }
 html body #productModal .modal-stock-note,
 html body #productModal #modalStockNote{
-  font-size: .72rem !important;
+  font-size: .78rem !important;
+  line-height: 1.55 !important;
 }
 html body #productModal .modal-tab strong{
   font-size: .72rem !important;
@@ -3490,7 +3496,7 @@ html body #productModal #modalAddToCart{
             if (descriptionText) descriptionText.textContent = description;
 
             const stockNote = document.getElementById('modalStockNote');
-            if (stockNote) stockNote.textContent = currentProduct.stock > 0 ? `${currentProduct.stock} pieces available` : 'Out of stock';
+            if (stockNote) stockNote.textContent = "Model's sizing: Lunia is 160cm | 50KG | Bust 33inch | Waist 27inch | Hip 38inch | Wear S.";
 
             productModal.classList.add('active');
             overlay.classList.add('active');
