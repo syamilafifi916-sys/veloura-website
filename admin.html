@@ -77,9 +77,6 @@
     .subscriber-search{max-width:360px;margin-bottom:14px}
     @media(max-width:800px){.grid,.analytics-grid,.form-grid{grid-template-columns:1fr}table{font-size:12px}}
 
-    /* Final admin update: Good To Know field removed from client admin */
-    #editGoodToKnow{display:none!important;}
-
   </style>
 </head>
 
@@ -831,7 +828,12 @@ window.openEditProductModal = function(id){
   document.getElementById("editImage3Url").value = images[2] || "";
   document.getElementById("editCaption").value = product.caption || product.shortDescription || DEFAULT_PRODUCT_CAPTION;
   document.getElementById("editDescription").value = product.description || DEFAULT_PRODUCT_DESCRIPTION;
-  document.getElementById("editGoodToKnow").value = product.goodToKnow || product.good_to_know || DEFAULT_PRODUCT_GOOD_TO_KNOW;
+
+  const goodToKnowField = document.getElementById("editGoodToKnow");
+  if (goodToKnowField) {
+    goodToKnowField.value = product.goodToKnow || product.good_to_know || DEFAULT_PRODUCT_GOOD_TO_KNOW;
+  }
+
   renderImagePreviews();
 
   document.getElementById("editProductModal").classList.add("active");
@@ -887,7 +889,6 @@ document.getElementById("editProductForm").addEventListener("submit", async (e) 
       caption: document.getElementById("editCaption").value.trim() || DEFAULT_PRODUCT_CAPTION,
       shortDescription: document.getElementById("editCaption").value.trim() || DEFAULT_PRODUCT_CAPTION,
       description: document.getElementById("editDescription").value.trim() || DEFAULT_PRODUCT_DESCRIPTION,
-      goodToKnow: document.getElementById("editGoodToKnow").value.trim() || DEFAULT_PRODUCT_GOOD_TO_KNOW,
       updatedAt: serverTimestamp()
     };
 
