@@ -75,6 +75,13 @@
     .section-header h2{margin:0}
     .subscriber-actions{display:flex;gap:10px;flex-wrap:wrap}
     .subscriber-search{max-width:360px;margin-bottom:14px}
+    .promo-form-grid{display:grid;grid-template-columns:1fr 150px 130px 150px 130px 150px 150px;gap:12px;align-items:end;margin-bottom:16px}
+    .promo-form-grid label{font-size:12px;color:#8C7C6C;font-weight:700;display:block;margin-bottom:6px}
+    .promo-badge{padding:6px 10px;border-radius:999px;background:#FFF1F7;color:#ED337F;display:inline-block;font-weight:700;font-size:12px}
+    .promo-badge.inactive{background:#f3f3f3;color:#777}
+    .promo-actions{display:flex;gap:8px;flex-wrap:wrap}
+    @media(max-width:1000px){.promo-form-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:700px){.promo-form-grid{grid-template-columns:1fr}}
     @media(max-width:800px){.grid,.analytics-grid,.form-grid{grid-template-columns:1fr}table{font-size:12px}}
 
   </style>
@@ -115,6 +122,68 @@
         </tr>
       </thead>
       <tbody id="productsTable"></tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <h2>Promo Codes</h2>
+      <button class="secondary" type="button" id="refreshPromosBtn">Refresh Promo Codes</button>
+    </div>
+    <form id="promoForm">
+      <input type="hidden" id="promoEditId">
+      <div class="promo-form-grid">
+        <div>
+          <label>Code</label>
+          <input id="promoCode" placeholder="WELCOME10" required>
+        </div>
+        <div>
+          <label>Type</label>
+          <select id="promoType">
+            <option value="percentage">Percentage (%)</option>
+            <option value="fixed">Fixed RM</option>
+          </select>
+        </div>
+        <div>
+          <label>Value</label>
+          <input id="promoValue" type="number" step="0.01" min="0" placeholder="10" required>
+        </div>
+        <div>
+          <label>Min Spend (RM)</label>
+          <input id="promoMinSpend" type="number" step="0.01" min="0" placeholder="100">
+        </div>
+        <div>
+          <label>Usage Limit</label>
+          <input id="promoUsageLimit" type="number" min="0" placeholder="100">
+        </div>
+        <div>
+          <label>Start Date</label>
+          <input id="promoStartDate" type="date">
+        </div>
+        <div>
+          <label>Expiry Date</label>
+          <input id="promoEndDate" type="date">
+        </div>
+      </div>
+      <div class="promo-actions">
+        <button class="save" type="submit" id="savePromoBtn" style="margin-top:0">Save Promo Code</button>
+        <button class="secondary" type="button" id="cancelPromoEditBtn" style="display:none">Cancel Edit</button>
+      </div>
+      <div class="helper-text">Set Usage Limit to 100 for “100 pelanggan pertama”. Use 0 or leave blank for unlimited.</div>
+    </form>
+    <table style="margin-top:18px">
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Discount</th>
+          <th>Min Spend</th>
+          <th>Limit / Used</th>
+          <th>Period</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="promoCodesTable"></tbody>
     </table>
   </div>
   <div class="section">
@@ -310,6 +379,7 @@ const db = getFirestore(app);
 let products = [];
 let orders = [];
 let subscribers = [];
+let promoCodes = [];
 let currentOrdersPage = 1;
 let currentSubscribersPage = 1;
 const subscribersPerPage = 10;
@@ -329,6 +399,7 @@ document.getElementById("logoutBtn").onclick = async () => {
 
 async function init(){
   await loadProducts();
+  await loadPromoCodes();
   await loadOrders();
   await loadSubscribers();
 }
@@ -583,6 +654,145 @@ function exportSubscribersCSV(){
 }
 
 
+
+function normalizePromoCode(value){
+  return String(value || "").trim().toUpperCase().replace(/\s+/g, "");
+}
+
+function promoStatus(promo){
+  const active = promo.active !== false && String(promo.status || "active").toLowerCase() === "active";
+  const now = new Date();
+  const start = promo.startDate ? new Date(`${promo.startDate}T00:00:00`) : null;
+  const end = promo.endDate ? new Date(`${promo.endDate}T23:59:59`) : null;
+  const usageLimit = Number(promo.usageLimit || 0);
+  const usedCount = Number(promo.usedCount || 0);
+  if (!active) return "Inactive";
+  if (start && !Number.isNaN(start.getTime()) && now < start) return "Scheduled";
+  if (end && !Number.isNaN(end.getTime()) && now > end) return "Expired";
+  if (usageLimit > 0 && usedCount >= usageLimit) return "Limit Reached";
+  return "Active";
+}
+
+async function loadPromoCodes(){
+  promoCodes = await readCollections(["discount_codes"]);
+  renderPromoCodesTable();
+}
+
+function resetPromoForm(){
+  document.getElementById("promoForm")?.reset();
+  document.getElementById("promoEditId").value = "";
+  const saveBtn = document.getElementById("savePromoBtn");
+  if (saveBtn) saveBtn.textContent = "Save Promo Code";
+  const cancelBtn = document.getElementById("cancelPromoEditBtn");
+  if (cancelBtn) cancelBtn.style.display = "none";
+}
+
+function renderPromoCodesTable(){
+  const table = document.getElementById("promoCodesTable");
+  if (!table) return;
+  promoCodes.sort((a,b) => String(a.code || "").localeCompare(String(b.code || "")));
+  table.innerHTML = promoCodes.length ? promoCodes.map(p => {
+    const status = promoStatus(p);
+    const isActive = status === "Active" || status === "Scheduled";
+    const typeLabel = String(p.type || "percentage") === "percentage" ? `${Number(p.value || 0)}%` : `RM ${Number(p.value || 0).toFixed(2)}`;
+    const limit = Number(p.usageLimit || 0) > 0 ? Number(p.usageLimit || 0) : "Unlimited";
+    const used = Number(p.usedCount || 0);
+    const period = `${p.startDate || "Anytime"}<br>to ${p.endDate || "No expiry"}`;
+    return `
+      <tr>
+        <td><strong>${p.code || "-"}</strong><br><span class="small">${p.id}</span></td>
+        <td>${typeLabel}</td>
+        <td>RM ${Number(p.minSpend || 0).toFixed(2)}</td>
+        <td>${used} / ${limit}</td>
+        <td><span class="small">${period}</span></td>
+        <td><span class="promo-badge ${isActive ? "" : "inactive"}">${status}</span></td>
+        <td>
+          <div class="promo-actions">
+            <button type="button" class="edit-btn" onclick="editPromoCode('${p.id}')">Edit</button>
+            <button type="button" class="secondary" onclick="togglePromoCode('${p.id}', ${p.active === false ? "true" : "false"})">${p.active === false ? "Activate" : "Disable"}</button>
+            <button type="button" class="danger" onclick="deletePromoCode('${p.id}')">Delete</button>
+          </div>
+        </td>
+      </tr>`;
+  }).join("") : `<tr><td colspan="7">No promo code found. Add one above, for example <strong>WELCOME10</strong>.</td></tr>`;
+}
+
+async function savePromoCode(event){
+  event.preventDefault();
+  const editId = document.getElementById("promoEditId").value;
+  const code = normalizePromoCode(document.getElementById("promoCode").value);
+  const type = document.getElementById("promoType").value;
+  const value = Number(document.getElementById("promoValue").value || 0);
+  const minSpend = Number(document.getElementById("promoMinSpend").value || 0);
+  const usageLimit = Number(document.getElementById("promoUsageLimit").value || 0);
+  const startDate = document.getElementById("promoStartDate").value || "";
+  const endDate = document.getElementById("promoEndDate").value || "";
+
+  if (!code || value <= 0) {
+    alert("Please enter promo code and discount value.");
+    return;
+  }
+  if (type === "percentage" && value > 100) {
+    alert("Percentage discount cannot be more than 100%.");
+    return;
+  }
+
+  const duplicate = promoCodes.find(p => normalizePromoCode(p.code) === code && p.id !== editId);
+  if (duplicate) {
+    alert("Promo code already exists.");
+    return;
+  }
+
+  const payload = {
+    code,
+    type,
+    value,
+    minSpend,
+    usageLimit,
+    startDate,
+    endDate,
+    active: true,
+    status: "active",
+    updatedAt: serverTimestamp()
+  };
+
+  if (editId) {
+    await updateDoc(doc(db, "discount_codes", editId), payload);
+  } else {
+    await addDoc(collection(db, "discount_codes"), { ...payload, usedCount: 0, createdAt: serverTimestamp() });
+  }
+
+  resetPromoForm();
+  await loadPromoCodes();
+}
+
+window.editPromoCode = function(id){
+  const promo = promoCodes.find(p => p.id === id);
+  if (!promo) return;
+  document.getElementById("promoEditId").value = promo.id;
+  document.getElementById("promoCode").value = promo.code || "";
+  document.getElementById("promoType").value = promo.type || "percentage";
+  document.getElementById("promoValue").value = promo.value || "";
+  document.getElementById("promoMinSpend").value = promo.minSpend || 0;
+  document.getElementById("promoUsageLimit").value = promo.usageLimit || "";
+  document.getElementById("promoStartDate").value = promo.startDate || "";
+  document.getElementById("promoEndDate").value = promo.endDate || "";
+  document.getElementById("savePromoBtn").textContent = "Update Promo Code";
+  document.getElementById("cancelPromoEditBtn").style.display = "inline-block";
+  document.getElementById("promoCode").focus();
+};
+
+window.togglePromoCode = async function(id, active){
+  await updateDoc(doc(db, "discount_codes", id), { active, status: active ? "active" : "inactive", updatedAt: serverTimestamp() });
+  await loadPromoCodes();
+};
+
+window.deletePromoCode = async function(id){
+  if (!confirm("Delete this promo code?")) return;
+  await deleteDoc(doc(db, "discount_codes", id));
+  await loadPromoCodes();
+};
+
 async function loadOrders(){
   orders = await readCollections(["Orders", "orders"]);
 
@@ -667,7 +877,10 @@ function renderOrdersTable(){
     const orderNo = o.orderNumber || o.orderNo || o.id;
     const paymentStatus = o.paymentStatus || (o.status === "paid" ? "paid" : "unpaid");
     const orderStatus = o.status || "pending";
-    const total = Number(o.totalAmount || o.total || 0).toFixed(2);
+    const total = Number(o.finalTotal || o.totalAmount || o.total || 0).toFixed(2);
+    const originalTotal = Number(o.subtotalBeforeDiscount || o.originalTotal || o.subtotal || o.totalAmount || o.total || 0);
+    const discountAmount = Number(o.discountAmount || o.promo?.discountAmount || 0);
+    const promoCode = o.promoCode || o.promo?.code || o.discountCode || "";
     const courier = o.courier || "";
     const trackingNumber = o.trackingNumber || "";
     const isPaid = String(paymentStatus).toLowerCase() === "paid";
@@ -706,7 +919,12 @@ function renderOrdersTable(){
         <span class="small">Collection: ${o._collection}</span>
       </td>
       <td>${renderItems(o.items)}</td>
-      <td>RM ${total}</td>
+      <td>
+        RM ${total}
+        ${promoCode ? `<br><span class="small">Promo: <strong>${promoCode}</strong></span>` : ""}
+        ${discountAmount > 0 ? `<br><span class="small">Discount: -RM ${discountAmount.toFixed(2)}</span>` : ""}
+        ${discountAmount > 0 ? `<br><span class="small">Before: RM ${originalTotal.toFixed(2)}</span>` : ""}
+      </td>
       <td>
         <span class="status ${paymentStatus === "paid" ? "status-paid" : "status-unpaid"}">${paymentStatus}</span><br>
         <span class="small">${o.paymentMethod || o.paymentGateway || "bayarcash"}</span>
@@ -1264,6 +1482,10 @@ document.getElementById("orderStatusFilter").addEventListener("change", resetOrd
 document.getElementById("orderDateFilter").addEventListener("change", resetOrdersPage);
 document.getElementById("orderSortBy").addEventListener("change", resetOrdersPage);
 document.getElementById("ordersPerPage").addEventListener("change", resetOrdersPage);
+document.getElementById("promoForm")?.addEventListener("submit", savePromoCode);
+document.getElementById("cancelPromoEditBtn")?.addEventListener("click", resetPromoForm);
+document.getElementById("refreshPromosBtn")?.addEventListener("click", loadPromoCodes);
+document.getElementById("promoCode")?.addEventListener("input", (e) => { e.target.value = normalizePromoCode(e.target.value); });
 document.getElementById("refreshOrdersBtn").addEventListener("click", async () => { currentOrdersPage = 1; await loadOrders(); });
 document.getElementById("prevOrdersPage").addEventListener("click", () => { if (currentOrdersPage > 1) { currentOrdersPage--; renderOrdersTable(); } });
 document.getElementById("nextOrdersPage").addEventListener("click", () => { currentOrdersPage++; renderOrdersTable(); });
