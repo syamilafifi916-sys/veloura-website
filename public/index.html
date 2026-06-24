@@ -773,6 +773,26 @@ img { max-width: 100%; height: auto; display: block; }
         .promo-message { margin-top: 8px; font-size: .82rem; font-weight: 700; line-height: 1.4; }
         .promo-message.success { color: var(--success); }
         .promo-message.error { color: var(--error); }
+        .promo-box { display:none; }
+        .promo-box.active { display:block; }
+        .promo-toggle {
+            display:none;
+            width:100%;
+            margin-bottom:14px;
+            padding:0;
+            background:transparent;
+            color:var(--primary);
+            font-size:.88rem;
+            font-weight:800;
+            letter-spacing:.8px;
+            text-transform:uppercase;
+            text-align:left;
+        }
+        .promo-toggle.active { display:block; }
+        .promo-toggle i { margin-right:8px; }
+        .promo-collapsible { display:none; }
+        .promo-box.expanded .promo-collapsible { display:block; }
+        .promo-box.expanded .promo-toggle { margin-bottom:12px; }
         .cart-summary-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; color: var(--text); font-size:.95rem; }
         .cart-summary-row.discount { color: var(--success); font-weight:700; }
 
@@ -3302,14 +3322,19 @@ html body #productModal .veloura-description-content .desc-bullet::before{
         </div>
         <div class="cart-items" id="cartItems"></div>
         <div class="cart-drawer-footer">
-            <div class="promo-box">
-                <div class="promo-title">Promo Code</div>
-                <div class="promo-row">
-                    <input class="promo-input" id="promoCodeInput" placeholder="Enter code e.g. WELCOME10">
-                    <button class="promo-apply" type="button" id="applyPromoBtn">Apply</button>
+            <div class="promo-box" id="promoBox" aria-hidden="true">
+                <button class="promo-toggle" type="button" id="promoToggle">
+                    <i class="fas fa-tag"></i> Have a Promo Code?
+                </button>
+                <div class="promo-collapsible" id="promoCollapsible">
+                    <div class="promo-title">Promo Code</div>
+                    <div class="promo-row">
+                        <input class="promo-input" id="promoCodeInput" placeholder="Enter code e.g. WELCOME10">
+                        <button class="promo-apply" type="button" id="applyPromoBtn">Apply</button>
+                    </div>
+                    <div class="promo-message" id="promoMessage"></div>
+                    <button class="promo-remove" type="button" id="removePromoBtn" style="display:none">Remove promo code</button>
                 </div>
-                <div class="promo-message" id="promoMessage"></div>
-                <button class="promo-remove" type="button" id="removePromoBtn" style="display:none">Remove promo code</button>
             </div>
             <div class="cart-summary-row"><span>Subtotal</span><span>RM <span id="cartSubtotal">0</span></span></div>
             <div class="cart-summary-row discount" id="cartDiscountRow" style="display:none"><span>Discount <span id="cartDiscountCode"></span></span><span>- RM <span id="cartDiscount">0</span></span></div>
@@ -3457,6 +3482,10 @@ html body #productModal .veloura-description-content .desc-bullet::before{
         const cartDiscount = document.getElementById('cartDiscount');
         const cartDiscountRow = document.getElementById('cartDiscountRow');
         const cartDiscountCode = document.getElementById('cartDiscountCode');
+        const promoBox = document.getElementById('promoBox');
+        const promoToggle = document.getElementById('promoToggle');
+        const promoCollapsible = document.getElementById('promoCollapsible');
+        let hasActivePromoCodes = false;
         const promoCodeInput = document.getElementById('promoCodeInput');
         const promoMessage = document.getElementById('promoMessage');
         const applyPromoBtn = document.getElementById('applyPromoBtn');
@@ -3649,6 +3678,43 @@ html body #productModal .veloura-description-content .desc-bullet::before{
             return '';
         }
 
+        function isPromoAvailableNow(promo) {
+            if (!promo) return false;
+            if (promo.active === false || String(promo.status || 'active').toLowerCase() !== 'active') return false;
+            if (isPromoNotStarted(promo) || isPromoExpired(promo)) return false;
+            const usageLimit = Number(promo.usageLimit || promo.limit || 0);
+            const usedCount = Number(promo.usedCount || 0);
+            if (usageLimit > 0 && usedCount >= usageLimit) return false;
+            return true;
+        }
+
+        function updatePromoVisibility(expand = false) {
+            if (!promoBox) return;
+            const shouldShow = hasActivePromoCodes || !!appliedPromo;
+            promoBox.classList.toggle('active', shouldShow);
+            promoBox.classList.toggle('expanded', shouldShow && (expand || !!appliedPromo));
+            promoBox.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
+            if (promoToggle) promoToggle.classList.toggle('active', shouldShow);
+            if (!shouldShow) {
+                if (promoCodeInput) promoCodeInput.value = '';
+                setPromoMessage('', '');
+            }
+        }
+
+        async function loadPromoAvailability() {
+            if (!promoBox) return;
+            try {
+                const snapshot = await getDocs(collection(db, 'discount_codes'));
+                hasActivePromoCodes = snapshot.docs
+                    .map(d => ({ id: d.id, ...d.data() }))
+                    .some(isPromoAvailableNow);
+            } catch (error) {
+                console.error('Promo availability error:', error);
+                hasActivePromoCodes = !!appliedPromo;
+            }
+            updatePromoVisibility(!!appliedPromo);
+        }
+
         async function applyPromoCode() {
             const code = String(promoCodeInput?.value || '').trim().toUpperCase();
             const subtotal = getCartSubtotal();
@@ -3713,7 +3779,9 @@ html body #productModal .veloura-description-content .desc-bullet::before{
             if (promoError) {
                 appliedPromo = null;
                 localStorage.removeItem('veloura_applied_promo');
+                if (promoCodeInput) promoCodeInput.value = '';
             }
+            updatePromoVisibility(!!appliedPromo);
             const discountAmount = appliedPromo ? calculateDiscount(appliedPromo, subtotal) : 0;
             const total = Math.max(0, subtotal - discountAmount);
             if (appliedPromo) {
@@ -3967,6 +4035,13 @@ function openProductModal(productId) {
         });
 
         checkoutBtn.addEventListener('click', checkout);
+        promoToggle?.addEventListener('click', () => {
+            if (!promoBox) return;
+            promoBox.classList.toggle('expanded');
+            if (promoBox.classList.contains('expanded')) {
+                setTimeout(() => promoCodeInput?.focus(), 50);
+            }
+        });
         applyPromoBtn?.addEventListener('click', applyPromoCode);
         removePromoBtn?.addEventListener('click', removePromoCode);
         promoCodeInput?.addEventListener('keydown', (event) => {
@@ -4000,6 +4075,7 @@ function openProductModal(productId) {
         window.contactSubmit = contactSubmit;
 
         loadProductsFromFirestore();
+        loadPromoAvailability();
         renderCart();
     </script>
 
