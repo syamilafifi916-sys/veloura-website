@@ -764,6 +764,17 @@ img { max-width: 100%; height: auto; display: block; }
         .cart-agreement label { font-size: 0.875rem; color: var(--text-light); line-height: 1.4; }
         .cart-checkout { width: 100%; padding: 16px; background-color: var(--primary); color: white; border-radius: var(--radius); font-weight: 600; font-size: 1rem; }
         .cart-checkout:hover { background-color: var(--primary-dark); }
+        .promo-box { margin-bottom: 18px; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius); background: #FFFDF8; }
+        .promo-title { font-size: .78rem; font-weight: 800; letter-spacing: 1.4px; text-transform: uppercase; color: var(--text-dark); margin-bottom: 10px; }
+        .promo-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+        .promo-input { min-height: 44px; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-dark); font-size: .95rem; text-transform: uppercase; }
+        .promo-apply { padding: 0 16px; border-radius: var(--radius); background: var(--neutral-dark); color: white; font-weight: 800; }
+        .promo-remove { margin-top: 8px; background: none; color: var(--error); font-size: .82rem; font-weight: 700; padding: 0; }
+        .promo-message { margin-top: 8px; font-size: .82rem; font-weight: 700; line-height: 1.4; }
+        .promo-message.success { color: var(--success); }
+        .promo-message.error { color: var(--error); }
+        .cart-summary-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; color: var(--text); font-size:.95rem; }
+        .cart-summary-row.discount { color: var(--success); font-weight:700; }
 
 .overlay {
             position: fixed;
@@ -3291,6 +3302,17 @@ html body #productModal .veloura-description-content .desc-bullet::before{
         </div>
         <div class="cart-items" id="cartItems"></div>
         <div class="cart-drawer-footer">
+            <div class="promo-box">
+                <div class="promo-title">Promo Code</div>
+                <div class="promo-row">
+                    <input class="promo-input" id="promoCodeInput" placeholder="Enter code e.g. WELCOME10">
+                    <button class="promo-apply" type="button" id="applyPromoBtn">Apply</button>
+                </div>
+                <div class="promo-message" id="promoMessage"></div>
+                <button class="promo-remove" type="button" id="removePromoBtn" style="display:none">Remove promo code</button>
+            </div>
+            <div class="cart-summary-row"><span>Subtotal</span><span>RM <span id="cartSubtotal">0</span></span></div>
+            <div class="cart-summary-row discount" id="cartDiscountRow" style="display:none"><span>Discount <span id="cartDiscountCode"></span></span><span>- RM <span id="cartDiscount">0</span></span></div>
             <div class="cart-total"><span class="cart-total-label">Total</span><span class="cart-total-amount">RM <span id="cartTotal">0</span></span></div>
             <div class="cart-agreements">
                 <div class="cart-agreement"><input type="checkbox" id="agreeTerms"><label for="agreeTerms">I confirm that I have reviewed and agree to VELOURA's Terms & Conditions.</label></div>
@@ -3372,6 +3394,7 @@ html body #productModal .veloura-description-content .desc-bullet::before{
 
         let products = [];
         let cart = JSON.parse(localStorage.getItem('veloura_cart')) || [];
+        let appliedPromo = JSON.parse(localStorage.getItem('veloura_applied_promo') || 'null');
         let currentProduct = null;
         let currentSlide = 0;
         let selectedSize = '';
@@ -3430,6 +3453,14 @@ html body #productModal .veloura-description-content .desc-bullet::before{
         const cartItems = document.getElementById('cartItems');
         const cartCount = document.getElementById('cartCount');
         const cartTotal = document.getElementById('cartTotal');
+        const cartSubtotal = document.getElementById('cartSubtotal');
+        const cartDiscount = document.getElementById('cartDiscount');
+        const cartDiscountRow = document.getElementById('cartDiscountRow');
+        const cartDiscountCode = document.getElementById('cartDiscountCode');
+        const promoCodeInput = document.getElementById('promoCodeInput');
+        const promoMessage = document.getElementById('promoMessage');
+        const applyPromoBtn = document.getElementById('applyPromoBtn');
+        const removePromoBtn = document.getElementById('removePromoBtn');
         const checkoutBtn = document.getElementById('checkoutBtn');
         const newsletterForm = document.getElementById('newsletterForm');
         const header = document.getElementById('siteHeader');
@@ -3567,13 +3598,146 @@ html body #productModal .veloura-description-content .desc-bullet::before{
             localStorage.setItem('veloura_cart', JSON.stringify(cart));
         }
 
+        function formatMoney(value) {
+            return Number(value || 0).toFixed(2);
+        }
+
+        function getCartSubtotal() {
+            return cart.reduce((sum, item) => sum + (Number(item.salePrice || item.price || 0) * item.qty), 0);
+        }
+
+        function calculateDiscount(promo, subtotal) {
+            if (!promo || !subtotal) return 0;
+            const type = String(promo.type || '').toLowerCase();
+            const value = Number(promo.value || 0);
+            let discount = 0;
+            if (type === 'percentage' || type === 'percent') discount = subtotal * (value / 100);
+            if (type === 'fixed' || type === 'amount' || type === 'rm') discount = value;
+            return Math.max(0, Math.min(discount, subtotal));
+        }
+
+        function setPromoMessage(message, type = '') {
+            if (!promoMessage) return;
+            promoMessage.textContent = message || '';
+            promoMessage.className = `promo-message ${type}`.trim();
+        }
+
+        function isPromoExpired(promo) {
+            const endDate = promo.endDate || promo.expiryDate || promo.expiredAt;
+            if (!endDate) return false;
+            const end = new Date(`${endDate}T23:59:59`);
+            return !Number.isNaN(end.getTime()) && new Date() > end;
+        }
+
+        function isPromoNotStarted(promo) {
+            const startDate = promo.startDate || promo.validFrom;
+            if (!startDate) return false;
+            const start = new Date(`${startDate}T00:00:00`);
+            return !Number.isNaN(start.getTime()) && new Date() < start;
+        }
+
+        function validatePromo(promo, subtotal) {
+            if (!promo) return 'Promo code tidak sah.';
+            if (promo.active === false || String(promo.status || 'active').toLowerCase() !== 'active') return 'Promo code ini tidak aktif.';
+            if (isPromoNotStarted(promo)) return 'Promo code ini belum bermula.';
+            if (isPromoExpired(promo)) return 'Promo code ini telah tamat tempoh.';
+            const minSpend = Number(promo.minSpend || promo.minimumSpend || 0);
+            if (subtotal < minSpend) return `Minimum pembelian untuk code ini ialah RM ${formatMoney(minSpend)}.`;
+            const usageLimit = Number(promo.usageLimit || promo.limit || 0);
+            const usedCount = Number(promo.usedCount || 0);
+            if (usageLimit > 0 && usedCount >= usageLimit) return 'Promo code ini telah mencapai had penggunaan.';
+            return '';
+        }
+
+        async function applyPromoCode() {
+            const code = String(promoCodeInput?.value || '').trim().toUpperCase();
+            const subtotal = getCartSubtotal();
+            if (!code) {
+                setPromoMessage('Masukkan promo code terlebih dahulu.', 'error');
+                return;
+            }
+            if (subtotal <= 0) {
+                setPromoMessage('Shopping bag masih kosong.', 'error');
+                return;
+            }
+
+            try {
+                const snapshot = await getDocs(collection(db, 'discount_codes'));
+                const promoDoc = snapshot.docs
+                    .map(d => ({ id: d.id, ...d.data() }))
+                    .find(p => String(p.code || '').trim().toUpperCase() === code);
+
+                const error = validatePromo(promoDoc, subtotal);
+                if (error) {
+                    appliedPromo = null;
+                    localStorage.removeItem('veloura_applied_promo');
+                    renderCart();
+                    setPromoMessage(error, 'error');
+                    return;
+                }
+
+                const discountAmount = calculateDiscount(promoDoc, subtotal);
+                appliedPromo = {
+                    id: promoDoc.id,
+                    code: String(promoDoc.code || code).toUpperCase(),
+                    type: promoDoc.type || 'percentage',
+                    value: Number(promoDoc.value || 0),
+                    minSpend: Number(promoDoc.minSpend || 0),
+                    usageLimit: Number(promoDoc.usageLimit || 0),
+                    usedCount: Number(promoDoc.usedCount || 0),
+                    discountAmount,
+                    subtotalBeforeDiscount: subtotal,
+                    finalTotal: Math.max(0, subtotal - discountAmount)
+                };
+                localStorage.setItem('veloura_applied_promo', JSON.stringify(appliedPromo));
+                renderCart();
+                setPromoMessage(`${appliedPromo.code} applied. You saved RM ${formatMoney(discountAmount)}.`, 'success');
+            } catch (error) {
+                console.error('Promo code error:', error);
+                setPromoMessage('Promo code tidak dapat disemak. Sila cuba lagi.', 'error');
+            }
+        }
+
+        function removePromoCode() {
+            appliedPromo = null;
+            localStorage.removeItem('veloura_applied_promo');
+            if (promoCodeInput) promoCodeInput.value = '';
+            setPromoMessage('', '');
+            renderCart();
+        }
+
         function renderCart() {
             const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
-            const total = cart.reduce((sum, item) => sum + (Number(item.salePrice || item.price || 0) * item.qty), 0);
+            const subtotal = getCartSubtotal();
+            const promoError = appliedPromo ? validatePromo(appliedPromo, subtotal) : '';
+            if (promoError) {
+                appliedPromo = null;
+                localStorage.removeItem('veloura_applied_promo');
+            }
+            const discountAmount = appliedPromo ? calculateDiscount(appliedPromo, subtotal) : 0;
+            const total = Math.max(0, subtotal - discountAmount);
+            if (appliedPromo) {
+                appliedPromo.discountAmount = discountAmount;
+                appliedPromo.subtotalBeforeDiscount = subtotal;
+                appliedPromo.finalTotal = total;
+                localStorage.setItem('veloura_applied_promo', JSON.stringify(appliedPromo));
+            }
             cartCount.textContent = totalQty;
-            cartTotal.textContent = total;
+            if (cartSubtotal) cartSubtotal.textContent = formatMoney(subtotal);
+            if (cartDiscount) cartDiscount.textContent = formatMoney(discountAmount);
+            if (cartDiscountCode) cartDiscountCode.textContent = appliedPromo ? `(${appliedPromo.code})` : '';
+            if (cartDiscountRow) cartDiscountRow.style.display = appliedPromo && discountAmount > 0 ? 'flex' : 'none';
+            if (removePromoBtn) removePromoBtn.style.display = appliedPromo ? 'inline-block' : 'none';
+            if (promoCodeInput && appliedPromo) promoCodeInput.value = appliedPromo.code;
+            cartTotal.textContent = formatMoney(total);
 
             if (cart.length === 0) {
+                appliedPromo = null;
+                localStorage.removeItem('veloura_applied_promo');
+                if (promoCodeInput) promoCodeInput.value = '';
+                if (cartDiscountRow) cartDiscountRow.style.display = 'none';
+                if (removePromoBtn) removePromoBtn.style.display = 'none';
+                setPromoMessage('', '');
                 cartItems.innerHTML = `
                     <div class="cart-empty">
                         <div class="cart-empty-icon"><i class="fas fa-shopping-bag"></i></div>
@@ -3590,7 +3754,7 @@ html body #productModal .veloura-description-content .desc-bullet::before{
                         <div class="cart-item-title">${item.name}</div>
                         <div class="cart-item-meta">Size: ${item.size} · Qty: ${item.qty}</div>
                         <div class="cart-item-footer">
-                            <span class="cart-item-price">RM ${Number(item.salePrice || item.price || 0) * item.qty}</span>
+                            <span class="cart-item-price">RM ${formatMoney(Number(item.salePrice || item.price || 0) * item.qty)}</span>
                             <button class="cart-item-remove" onclick="removeFromCart('${item.key}')">Remove</button>
                         </div>
                     </div>
@@ -3758,6 +3922,15 @@ function openProductModal(productId) {
                 return;
             }
 
+            const subtotal = getCartSubtotal();
+            const discountAmount = appliedPromo ? calculateDiscount(appliedPromo, subtotal) : 0;
+            const checkoutSummary = {
+                subtotalBeforeDiscount: subtotal,
+                discountAmount,
+                finalTotal: Math.max(0, subtotal - discountAmount),
+                promo: appliedPromo || null
+            };
+            localStorage.setItem('veloura_checkout_summary', JSON.stringify(checkoutSummary));
             window.location.href = "checkout.html";
         }
 
@@ -3794,6 +3967,14 @@ function openProductModal(productId) {
         });
 
         checkoutBtn.addEventListener('click', checkout);
+        applyPromoBtn?.addEventListener('click', applyPromoCode);
+        removePromoBtn?.addEventListener('click', removePromoCode);
+        promoCodeInput?.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                applyPromoCode();
+            }
+        });
         newsletterForm.addEventListener('submit', subscribe);
 
         document.querySelectorAll('.mobile-nav-link').forEach(link => {
