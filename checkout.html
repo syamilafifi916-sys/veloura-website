@@ -30,6 +30,8 @@ textarea{min-height:100px;resize:vertical}
 .item img{width:72px;height:92px;object-fit:cover;border-radius:10px;background:#FFF1F7}
 .item-title{font-weight:800;color:var(--neutral-dark)}
 .small{font-size:13px;color:var(--text-light)}
+.summary-row{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:15px;color:var(--text)}
+.summary-row.discount{color:#2e7d32;font-weight:800}
 .total{display:flex;justify-content:space-between;align-items:center;margin-top:18px;font-size:22px;font-weight:900;color:var(--neutral-dark)}
 button{width:100%;padding:15px;border:none;border-radius:var(--radius);background:var(--primary);color:white;font-weight:900;margin-top:18px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px}
 button:hover{background:var(--primary-dark)}
@@ -151,7 +153,7 @@ select{
         </select>
 
         <button type="submit" id="placeOrderBtn">Place Order</button>
-        <div class="notice">Selepas klik Place Order, anda akan dibawa ke halaman pembayaran Bayarcash.</div>
+        <div class="notice">Selepas klik Place Order, anda akan dibawa ke halaman pembayaran DOKU.</div>
         <div class="error" id="errorMsg"></div>
       </form>
     </div>
@@ -159,6 +161,8 @@ select{
     <div class="card">
       <h2>Order Summary</h2>
       <div id="orderItems"></div>
+      <div class="summary-row" id="subtotalRow" style="display:none"><span>Subtotal</span><span>RM <span id="orderSubtotal">0</span></span></div>
+      <div class="summary-row discount" id="discountRow" style="display:none"><span>Discount <span id="discountCode"></span></span><span>-RM <span id="discountAmount">0</span></span></div>
       <div class="total"><span>Total</span><span>RM <span id="orderTotal">0</span></span></div>
     </div>
   </div>
@@ -181,8 +185,15 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const cart = JSON.parse(localStorage.getItem("veloura_cart")) || [];
+const appliedPromo = JSON.parse(localStorage.getItem("veloura_applied_promo") || "null");
+const checkoutSummary = JSON.parse(localStorage.getItem("veloura_checkout_summary") || "null");
 const orderItems = document.getElementById("orderItems");
 const orderTotal = document.getElementById("orderTotal");
+const orderSubtotal = document.getElementById("orderSubtotal");
+const subtotalRow = document.getElementById("subtotalRow");
+const discountRow = document.getElementById("discountRow");
+const discountCode = document.getElementById("discountCode");
+const discountAmountEl = document.getElementById("discountAmount");
 const errorMsg = document.getElementById("errorMsg");
 const placeOrderBtn = document.getElementById("placeOrderBtn");
 
@@ -194,8 +205,18 @@ function itemPrice(item) {
   return Number(item.salePrice || item.price || item.unitPrice || 0);
 }
 
-const totalAmount = cart.reduce((sum,item) => sum + itemPrice(item) * Number(item.qty || 1), 0);
+const cartSubtotal = cart.reduce((sum,item) => sum + itemPrice(item) * Number(item.qty || 1), 0);
+const promoDiscount = Number(checkoutSummary?.discountAmount || appliedPromo?.discountAmount || 0);
+const totalAmount = Math.max(Number(checkoutSummary?.total || (cartSubtotal - promoDiscount)) || 0, 0);
 orderTotal.textContent = money(totalAmount);
+
+if (promoDiscount > 0) {
+  if (subtotalRow) subtotalRow.style.display = "flex";
+  if (discountRow) discountRow.style.display = "flex";
+  if (orderSubtotal) orderSubtotal.textContent = money(cartSubtotal);
+  if (discountAmountEl) discountAmountEl.textContent = money(promoDiscount);
+  if (discountCode) discountCode.textContent = appliedPromo?.code ? `(${appliedPromo.code})` : "";
+}
 
 if(cart.length === 0) {
   orderItems.innerHTML = "<p>Your cart is empty.</p>";
@@ -245,10 +266,14 @@ document.getElementById("checkoutForm").addEventListener("submit", async (e) => 
       price: itemPrice(item),
       subtotal: itemPrice(item) * Number(item.qty || 1)
     })),
+subtotalAmount: cartSubtotal,
+discountAmount: promoDiscount,
+promoCode: appliedPromo?.code || "",
+promo: appliedPromo || null,
 totalAmount,
 
 paymentStatus: "unpaid",
-paymentMethod: "bayarcash",
+paymentMethod: "doku",
 paymentReference: "",
 paidAt: null,
 
@@ -282,6 +307,9 @@ createdAt: serverTimestamp()
           price: itemPrice(item),
           subtotal: itemPrice(item) * Number(item.qty || 1)
         })),
+        subtotal: cartSubtotal,
+        discount: promoDiscount,
+        promo: appliedPromo || null,
         total: totalAmount
       })
     });
@@ -297,6 +325,8 @@ createdAt: serverTimestamp()
     }
 
     localStorage.removeItem("veloura_cart");
+    localStorage.removeItem("veloura_applied_promo");
+    localStorage.removeItem("veloura_checkout_summary");
     window.location.href = result.paymentUrl;
 
   } catch(error) {
