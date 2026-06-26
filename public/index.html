@@ -2853,6 +2853,205 @@ html body #productModal .veloura-description-content .desc-bullet::before{
 }
 </style>
 
+
+<style id="frontend-feedback-no-backend-fixes">
+/* Feedback No. 1: promo headline readability fix
+   Desktop/tablet: slow continuous marquee.
+   Mobile: smooth readable ticker, 1 promo message at a time. */
+html body .announcement-track{
+    animation-duration: 22s !important;
+    will-change: transform !important;
+}
+@media (min-width:768px) and (max-width:1199px){
+    html body .announcement-track{
+        animation-duration: 18s !important;
+    }
+}
+@media(max-width:767px){
+    html body .announcement-bar{
+        min-height: 31px !important;
+    }
+
+    html body .announcement-bar .container{
+        overflow: hidden !important;
+    }
+
+    html body .announcement-track{
+        animation: none !important;
+        transform: none !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0 !important;
+        width: 100% !important;
+        min-height: 20px !important;
+        position: relative !important;
+        overflow: hidden !important;
+        white-space: nowrap !important;
+    }
+
+    html body .announcement-track.mobile-ticker-ready .announcement-item{
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 9px !important;
+        position: absolute !important;
+        inset: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        text-align: center !important;
+        line-height: 1.25 !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        transform: translateY(7px) !important;
+        transition:
+            opacity .48s ease,
+            transform .48s ease,
+            visibility 0s linear .48s !important;
+        pointer-events: none !important;
+        will-change: opacity, transform !important;
+    }
+
+    html body .announcement-track.mobile-ticker-ready .announcement-item.promo-ticker-active{
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: translateY(0) !important;
+        transition:
+            opacity .48s ease,
+            transform .48s ease,
+            visibility 0s linear 0s !important;
+        pointer-events: auto !important;
+    }
+
+    html body .announcement-track.mobile-ticker-ready .announcement-item.promo-ticker-exit{
+        opacity: 0 !important;
+        visibility: visible !important;
+        transform: translateY(-7px) !important;
+    }
+
+    html body .announcement-track.mobile-ticker-ready .announcement-item.promo-ticker-duplicate{
+        display: none !important;
+    }
+
+    html body .announcement-track:not(.mobile-ticker-ready) .announcement-item:not(:first-child){
+        display: none !important;
+    }
+
+    html body .announcement-item span{
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: calc(100vw - 62px) !important;
+    }
+}
+@media(max-width:380px){
+    html body .announcement-bar{
+        font-size: .56rem !important;
+        letter-spacing: .1em !important;
+        min-height: 31px !important;
+    }
+
+    html body .announcement-track{
+        min-height: 20px !important;
+    }
+}
+
+
+/* MOBILE PROMO TICKER FULL-TEXT FIX
+   Prevent long promo messages from being cut off on mobile. */
+@media(max-width:767px){
+    html body .announcement-bar{
+        min-height: 36px !important;
+        padding: .46rem 0 !important;
+        font-size: .58rem !important;
+        letter-spacing: .075em !important;
+        line-height: 1.25 !important;
+    }
+
+    html body .announcement-track{
+        min-height: 24px !important;
+        padding: 0 8px !important;
+    }
+
+    html body .announcement-track.mobile-ticker-ready .announcement-item{
+        min-height: 24px !important;
+        height: auto !important;
+        padding: 0 8px !important;
+        line-height: 1.25 !important;
+        white-space: normal !important;
+    }
+
+    html body .announcement-track.mobile-ticker-ready .announcement-icon{
+        flex: 0 0 auto !important;
+        font-size: .72rem !important;
+    }
+
+    html body .announcement-track.mobile-ticker-ready .announcement-item span{
+        display: inline-block !important;
+        max-width: calc(100vw - 84px) !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        text-align: center !important;
+        line-height: 1.25 !important;
+        letter-spacing: .075em !important;
+    }
+}
+
+@media(max-width:380px){
+    html body .announcement-bar{
+        min-height: 42px !important;
+        padding: .42rem 0 !important;
+        font-size: .52rem !important;
+        letter-spacing: .045em !important;
+    }
+
+    html body .announcement-track{
+        min-height: 31px !important;
+        padding: 0 6px !important;
+    }
+
+    html body .announcement-track.mobile-ticker-ready .announcement-item{
+        min-height: 31px !important;
+        gap: 7px !important;
+    }
+
+    html body .announcement-track.mobile-ticker-ready .announcement-item span{
+        max-width: calc(100vw - 70px) !important;
+        letter-spacing: .045em !important;
+        line-height: 1.22 !important;
+    }
+}
+
+/* Feedback No. 2: allow up to 7 catalog/product modal image frames */
+html body #productModal .product-thumbnails{
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    justify-content: center !important;
+    padding: 0 4px 4px !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+}
+html body #productModal .product-thumb-btn{
+    flex: 0 0 auto !important;
+    width: 58px !important;
+    height: 74px !important;
+}
+@media(max-width:767px){
+    html body #productModal .product-thumbnails{
+        justify-content: flex-start !important;
+        left: 16px !important;
+        right: 16px !important;
+    }
+    html body #productModal .product-thumb-btn{
+        width: 48px !important;
+        height: 62px !important;
+    }
+}
+</style>
+
 </head>
 <body>
     <div class="announcement-bar">
@@ -2906,7 +3105,13 @@ html body #productModal .veloura-description-content .desc-bullet::before{
     </div>
 
 <section class="hero" id="home">
-        <div class="hero-slider"><div class="hero-slide active" style="background-image:url(https://res.cloudinary.com/dtvkneyyf/image/upload/v1781670092/7G5A1316500_psglxn.avif)"></div><div class="hero-slide" style="background-image:url(https://res.cloudinary.com/dtvkneyyf/image/upload/v1781670090/VELOURA0037_1298_lycxj8.avif)"></div><div class="hero-slide" style="background-image:url(https://res.cloudinary.com/dtvkneyyf/image/upload/v1781670090/VELOURA0114253_jop25u.avif)"></div><div class="hero-slide" style="background-image:url(https://res.cloudinary.com/dtvkneyyf/image/upload/v1781670089/VELOURA0117_1448_efe7t8.avif)"></div><div class="hero-slide" style="background-image:url(https://res.cloudinary.com/dtvkneyyf/image/upload/v1781670087/7G5A1344528_qzpszs.avif)"></div></div>
+        <div class="hero-slider">
+            <div class="hero-slide active" style="background-image:url(https://res.cloudinary.com/dtvkneyyf/image/upload/v1782493424/PIC_1_-_Banner_xq2k3g.avif)"></div>
+            <div class="hero-slide" style="background-image:url(https://res.cloudinary.com/dtvkneyyf/image/upload/v1782493424/PIC_2_-_Banner_mk5ifj.avif)"></div>
+            <div class="hero-slide" style="background-image:url(https://res.cloudinary.com/dtvkneyyf/image/upload/v1782493424/PIC_3_-_Banner_vm10tn.avif)"></div>
+            <div class="hero-slide" style="background-image:url(https://res.cloudinary.com/dtvkneyyf/image/upload/v1782493424/PIC_4_-_Banner_rjxlma.avif)"></div>
+            <div class="hero-slide" style="background-image:url(https://res.cloudinary.com/dtvkneyyf/image/upload/v1782493424/PIC_5_-_Banner_ufgizo.avif)"></div>
+        </div>
         <div class="hero-overlay"></div>
         <div class="container">
         </div>
@@ -2940,7 +3145,7 @@ html body #productModal .veloura-description-content .desc-bullet::before{
             <div class="lookbook-frame">
                 <div class="promo-lookbook-grid">
                     <div class="promo-lookbook-card large">
-                        <img src="https://res.cloudinary.com/dtvkneyyf/image/upload/v1781670994/VELOURA_CAT.-326_converted_xwbuu2.avif" alt="Graceful movement">
+                        <img src="https://res.cloudinary.com/dtvkneyyf/image/upload/v1782494175/The_Working_Girl_ta1et9.avif" alt="The Working Girl">
                         <div class="promo-lookbook-copy">
                             <span>The Working Girl</span>
                             <h3>Polished &amp; Effortless</h3>
@@ -2948,7 +3153,7 @@ html body #productModal .veloura-description-content .desc-bullet::before{
                     </div>
 
                     <div class="promo-lookbook-card">
-                        <img src="https://res.cloudinary.com/dtvkneyyf/image/upload/v1781670994/VELOURA0048187_converted_yefqjw.avif" alt="Soft sophistication">
+                        <img src="https://res.cloudinary.com/dtvkneyyf/image/upload/v1782494175/The_Soft_Girl_zcyvmk.avif" alt="The Soft Girl">
                         <div class="promo-lookbook-copy">
                             <span>The Soft Girl</span>
                             <h3>Light, Graceful &amp; Feminine</h3>
@@ -2956,7 +3161,7 @@ html body #productModal .veloura-description-content .desc-bullet::before{
                     </div>
 
                     <div class="promo-lookbook-card">
-                        <img src="https://res.cloudinary.com/dtvkneyyf/image/upload/v1781670992/VELOURA_CAT.-137_converted_fybajv.avif" alt="Texture and detail">
+                        <img src="https://res.cloudinary.com/dtvkneyyf/image/upload/v1782494176/The_Off_Duty_Girl_oipggk.avif" alt="The Off Duty Girl">
                         <div class="promo-lookbook-copy">
                             <span>The Off Duty Girl</span>
                             <h3>Refined Casual Moments</h3>
@@ -3428,6 +3633,28 @@ html body #productModal .veloura-description-content .desc-bullet::before{
         const DEFAULT_PRODUCT_DESCRIPTION = "Effortless elegance in a breathable linen cotton blend.";
         const DEFAULT_PRODUCT_GOOD_TO_KNOW = "100% premium linen, inclusive sizing from XS to 4XL, and produced in limited quantities. Pre-order timeline is approximately 2–4 weeks before dispatch.";
 
+        // Frontend-only image override for First Bloom in Rose Glow catalog/product modal.
+        const ROSE_GLOW_GALLERY = [
+            "https://res.cloudinary.com/dtvkneyyf/image/upload/v1782495206/Main_Pic_Rose_Glow_converted_qbcgan.avif",
+            "https://res.cloudinary.com/dtvkneyyf/image/upload/v1782495206/PIC_2_-_Rose_Glow_converted_q8i4qv.avif",
+            "https://res.cloudinary.com/dtvkneyyf/image/upload/v1782495207/PIC_3_-_Rose_Glow_converted_hc4sk3.avif",
+            "https://res.cloudinary.com/dtvkneyyf/image/upload/v1782495209/PIC_4_-_Rose_Glow_converted_aplwgc.avif",
+            "https://res.cloudinary.com/dtvkneyyf/image/upload/v1782495209/PIC_5_-_Rose_Glow_converted_a51hup.avif",
+            "https://res.cloudinary.com/dtvkneyyf/image/upload/v1782495210/PIC_6_-_Rose_Glow_converted_x7ehf0.avif",
+            "https://res.cloudinary.com/dtvkneyyf/image/upload/v1782495210/PIC_7_-_Rose_Glow_converted_qxiwg7.avif"
+        ];
+
+        // Frontend-only image override for First Bloom in Ivory Luxe catalog/product modal.
+        const IVORY_LUXE_GALLERY = [
+            "https://res.cloudinary.com/dtvkneyyf/image/upload/v1782496098/Main_Pic_Ivory_Luxe_converted_zh5whj.avif",
+            "https://res.cloudinary.com/dtvkneyyf/image/upload/v1782496099/PIC_2_-_Ivory_Luxe_converted_qsgzek.avif",
+            "https://res.cloudinary.com/dtvkneyyf/image/upload/v1782496100/PIC_3_-_Ivory_Luxe_converted_xmf2pb.avif",
+            "https://res.cloudinary.com/dtvkneyyf/image/upload/v1782496101/PIC_4_-_Ivory_Luxe_converted_qpu6a5.avif",
+            "https://res.cloudinary.com/dtvkneyyf/image/upload/v1782496101/PIC_5-_Ivory_Luxe_converted_qffkci.avif",
+            "https://res.cloudinary.com/dtvkneyyf/image/upload/v1782496103/PIC_6-_Ivory_Luxe_converted_chgjhz.avif",
+            "https://res.cloudinary.com/dtvkneyyf/image/upload/v1782496119/PIC_7-_Ivory_Luxe_converted_h6rwda.avif"
+        ];
+
         const FALLBACK_PRODUCTS = [
             {
                 id: "fallback-ivory-luxe",
@@ -3435,12 +3662,8 @@ html body #productModal .veloura-description-content .desc-bullet::before{
                 category: "100% Pure Linen",
                 originalPrice: 229,
                 salePrice: 189,
-                image: "https://dummyimage.com/600x800/f8f1e9/3a271f&text=Ivory+Luxe",
-                gallery: [
-                    "https://dummyimage.com/600x800/f8f1e9/3a271f&text=Ivory+Luxe+1",
-                    "https://dummyimage.com/600x800/f8f1e9/3a271f&text=Ivory+Luxe+2",
-                    "https://dummyimage.com/600x800/f8f1e9/3a271f&text=Ivory+Luxe+3"
-                ],
+                image: IVORY_LUXE_GALLERY[0],
+                gallery: IVORY_LUXE_GALLERY,
                 sizes: ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL"],
                 caption: DEFAULT_PRODUCT_CAPTION,
                 description: DEFAULT_PRODUCT_DESCRIPTION,
@@ -3453,12 +3676,8 @@ html body #productModal .veloura-description-content .desc-bullet::before{
                 category: "100% Pure Linen",
                 originalPrice: 229,
                 salePrice: 189,
-                image: "https://dummyimage.com/600x800/f8f1e9/3a271f&text=Ros%C3%A9+Glow",
-                gallery: [
-                    "https://dummyimage.com/600x800/f8f1e9/3a271f&text=Ros%C3%A9+Glow+1",
-                    "https://dummyimage.com/600x800/f8f1e9/3a271f&text=Ros%C3%A9+Glow+2",
-                    "https://dummyimage.com/600x800/f8f1e9/3a271f&text=Ros%C3%A9+Glow+3"
-                ],
+                image: ROSE_GLOW_GALLERY[0],
+                gallery: ROSE_GLOW_GALLERY,
                 sizes: ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL"],
                 caption: DEFAULT_PRODUCT_CAPTION,
                 description: DEFAULT_PRODUCT_DESCRIPTION,
@@ -3508,12 +3727,43 @@ html body #productModal .veloura-description-content .desc-bullet::before{
             const candidates = [];
             if (Array.isArray(data.images)) candidates.push(...data.images);
             if (Array.isArray(data.gallery)) candidates.push(...data.gallery);
-            [data.image1Url, data.image2Url, data.image3Url, data.imageUrl, data.image].forEach(url => {
+            [
+                data.image1Url, data.image2Url, data.image3Url, data.image4Url, data.image5Url, data.image6Url, data.image7Url,
+                data.image1, data.image2, data.image3, data.image4, data.image5, data.image6, data.image7,
+                data.imageUrl, data.image
+            ].forEach(url => {
                 if (url) candidates.push(url);
             });
             const clean = candidates.map(url => String(url || "").trim()).filter(Boolean);
             const unique = [...new Set(clean)];
-            return unique.length ? unique.slice(0, 3) : [fallbackImage];
+            return unique.length ? unique.slice(0, 7) : [fallbackImage];
+        }
+
+        function applyFrontendProductImageOverrides(product) {
+            const productText = `${product.id || ''} ${product.name || ''}`
+                .normalize('NFD')
+                .replace(/[̀-ͯ]/g, '')
+                .toLowerCase();
+
+            const isIvoryLuxe = productText.includes('ivory luxe') || productText.includes('ivory-luxe');
+            if (isIvoryLuxe) {
+                return {
+                    ...product,
+                    image: IVORY_LUXE_GALLERY[0],
+                    gallery: IVORY_LUXE_GALLERY
+                };
+            }
+
+            const isRoseGlow = productText.includes('rose glow') || productText.includes('rose-glow');
+            if (isRoseGlow) {
+                return {
+                    ...product,
+                    image: ROSE_GLOW_GALLERY[0],
+                    gallery: ROSE_GLOW_GALLERY
+                };
+            }
+
+            return product;
         }
 
         function normalizeProduct(docId, data) {
@@ -3523,7 +3773,7 @@ html body #productModal .veloura-description-content .desc-bullet::before{
             const salePrice = Number(data.salePrice ?? data.price ?? 0);
             const originalPrice = Number(data.originalPrice ?? data.oriPrice ?? data.price ?? 0);
 
-            return {
+            const product = {
                 id: docId,
                 name: data.name || "Veloura Product",
                 category: data.category || "Linen Modestwear",
@@ -3539,6 +3789,8 @@ html body #productModal .veloura-description-content .desc-bullet::before{
                 goodToKnow: data.goodToKnow || data.good_to_know || DEFAULT_PRODUCT_GOOD_TO_KNOW,
                 stock: Number(data.stock ?? 0)
             };
+
+            return applyFrontendProductImageOverrides(product);
         }
 
         async function loadProductsFromFirestore() {
@@ -3631,6 +3883,10 @@ html body #productModal .veloura-description-content .desc-bullet::before{
             return Number(value || 0).toFixed(2);
         }
 
+        function toMoneyNumber(value) {
+            return Number(formatMoney(value));
+        }
+
         function getCartSubtotal() {
             return cart.reduce((sum, item) => sum + (Number(item.salePrice || item.price || 0) * item.qty), 0);
         }
@@ -3666,7 +3922,7 @@ html body #productModal .veloura-description-content .desc-bullet::before{
         }
 
         function validatePromo(promo, subtotal) {
-            if (!promo) return 'Promo code tidak sah.';
+            if (!promo) return 'Invalid Promo Code';
             if (promo.active === false || String(promo.status || 'active').toLowerCase() !== 'active') return 'Promo code ini tidak aktif.';
             if (isPromoNotStarted(promo)) return 'Promo code ini belum bermula.';
             if (isPromoExpired(promo)) return 'Promo code ini telah tamat tempoh.';
@@ -3751,9 +4007,10 @@ html body #productModal .veloura-description-content .desc-bullet::before{
                     minSpend: Number(promoDoc.minSpend || 0),
                     usageLimit: Number(promoDoc.usageLimit || 0),
                     usedCount: Number(promoDoc.usedCount || 0),
-                    discountAmount,
-                    subtotalBeforeDiscount: subtotal,
-                    finalTotal: Math.max(0, subtotal - discountAmount)
+                    discountAmount: toMoneyNumber(discountAmount),
+                    subtotalBeforeDiscount: toMoneyNumber(subtotal),
+                    finalTotal: toMoneyNumber(Math.max(0, subtotal - discountAmount)),
+                    finalTotalFormatted: formatMoney(Math.max(0, subtotal - discountAmount))
                 };
                 localStorage.setItem('veloura_applied_promo', JSON.stringify(appliedPromo));
                 renderCart();
@@ -3785,9 +4042,10 @@ html body #productModal .veloura-description-content .desc-bullet::before{
             const discountAmount = appliedPromo ? calculateDiscount(appliedPromo, subtotal) : 0;
             const total = Math.max(0, subtotal - discountAmount);
             if (appliedPromo) {
-                appliedPromo.discountAmount = discountAmount;
-                appliedPromo.subtotalBeforeDiscount = subtotal;
-                appliedPromo.finalTotal = total;
+                appliedPromo.discountAmount = toMoneyNumber(discountAmount);
+                appliedPromo.subtotalBeforeDiscount = toMoneyNumber(subtotal);
+                appliedPromo.finalTotal = toMoneyNumber(total);
+                appliedPromo.finalTotalFormatted = formatMoney(total);
                 localStorage.setItem('veloura_applied_promo', JSON.stringify(appliedPromo));
             }
             cartCount.textContent = totalQty;
@@ -3954,7 +4212,7 @@ function openProductModal(productId) {
             const container = document.getElementById('modalThumbnails');
             if (!container || !currentProduct) return;
             const images = currentProduct.gallery && currentProduct.gallery.length ? currentProduct.gallery : [currentProduct.image];
-            container.innerHTML = images.slice(0, 3).map((img, index) => `
+            container.innerHTML = images.slice(0, 7).map((img, index) => `
                 <button type="button" class="product-thumb-btn ${index === currentSlide ? 'active' : ''}" onclick="selectModalImage(${index})">
                     <img src="${img}" alt="${currentProduct.name} image ${index + 1}">
                 </button>
@@ -3992,10 +4250,12 @@ function openProductModal(productId) {
 
             const subtotal = getCartSubtotal();
             const discountAmount = appliedPromo ? calculateDiscount(appliedPromo, subtotal) : 0;
+            const finalTotal = Math.max(0, subtotal - discountAmount);
             const checkoutSummary = {
-                subtotalBeforeDiscount: subtotal,
-                discountAmount,
-                finalTotal: Math.max(0, subtotal - discountAmount),
+                subtotalBeforeDiscount: toMoneyNumber(subtotal),
+                discountAmount: toMoneyNumber(discountAmount),
+                finalTotal: toMoneyNumber(finalTotal),
+                finalTotalFormatted: formatMoney(finalTotal),
                 promo: appliedPromo || null
             };
             localStorage.setItem('veloura_checkout_summary', JSON.stringify(checkoutSummary));
@@ -4147,5 +4407,132 @@ function openProductModal(productId) {
   play();
 })();
 </script>
+
+<script id="mobile-promo-ticker-js">
+(function(){
+    var mobileQuery = window.matchMedia('(max-width: 767px)');
+    var smallMobileQuery = window.matchMedia('(max-width: 380px)');
+    var track = document.querySelector('.announcement-track');
+    if(!track) return;
+
+    var allItems = Array.prototype.slice.call(track.querySelectorAll('.announcement-item'));
+    if(!allItems.length) return;
+
+    var uniqueItems = [];
+    var seenMessages = {};
+
+    allItems.forEach(function(item){
+        var message = (item.textContent || '').replace(/\s+/g, ' ').trim();
+        if(!message || seenMessages[message]){
+            item.classList.add('promo-ticker-duplicate');
+            return;
+        }
+        seenMessages[message] = true;
+        item.classList.add('promo-ticker-item');
+        uniqueItems.push(item);
+    });
+
+    var currentIndex = 0;
+    var displayedIndex = -1;
+    var tickerTimer = null;
+    var exitTimer = null;
+
+    function clearTicker(){
+        if(tickerTimer){
+            clearInterval(tickerTimer);
+            tickerTimer = null;
+        }
+        if(exitTimer){
+            clearTimeout(exitTimer);
+            exitTimer = null;
+        }
+    }
+
+    function clearTickerClasses(){
+        allItems.forEach(function(item){
+            item.classList.remove('promo-ticker-active', 'promo-ticker-exit');
+        });
+    }
+
+    function showPromo(index){
+        if(!uniqueItems.length) return;
+
+        var previousIndex = displayedIndex;
+        var previousItem = previousIndex >= 0 ? uniqueItems[previousIndex] : null;
+        var nextItem = uniqueItems[index];
+
+        uniqueItems.forEach(function(item, itemIndex){
+            if(itemIndex !== previousIndex && itemIndex !== index){
+                item.classList.remove('promo-ticker-active', 'promo-ticker-exit');
+            }
+        });
+
+        if(previousItem && previousItem !== nextItem){
+            previousItem.classList.remove('promo-ticker-active');
+            previousItem.classList.add('promo-ticker-exit');
+        }
+
+        if(nextItem){
+            nextItem.classList.remove('promo-ticker-exit');
+            window.requestAnimationFrame(function(){
+                nextItem.classList.add('promo-ticker-active');
+            });
+        }
+
+        displayedIndex = index;
+
+        if(exitTimer){
+            clearTimeout(exitTimer);
+        }
+        exitTimer = setTimeout(function(){
+            uniqueItems.forEach(function(item, itemIndex){
+                if(itemIndex !== displayedIndex){
+                    item.classList.remove('promo-ticker-exit');
+                }
+            });
+        }, 620);
+    }
+
+    function startMobileTicker(){
+        clearTicker();
+        track.classList.add('mobile-ticker-ready');
+        currentIndex = currentIndex % uniqueItems.length;
+        showPromo(currentIndex);
+
+        var delay = smallMobileQuery.matches ? 5500 : 5000;
+
+        tickerTimer = setInterval(function(){
+            currentIndex = (currentIndex + 1) % uniqueItems.length;
+            showPromo(currentIndex);
+        }, delay);
+    }
+
+    function startDesktopMarquee(){
+        clearTicker();
+        track.classList.remove('mobile-ticker-ready');
+        displayedIndex = -1;
+        clearTickerClasses();
+    }
+
+    function handleAnnouncementMode(){
+        if(mobileQuery.matches){
+            startMobileTicker();
+        }else{
+            startDesktopMarquee();
+        }
+    }
+
+    handleAnnouncementMode();
+
+    if(mobileQuery.addEventListener){
+        mobileQuery.addEventListener('change', handleAnnouncementMode);
+        smallMobileQuery.addEventListener('change', handleAnnouncementMode);
+    }else if(mobileQuery.addListener){
+        mobileQuery.addListener(handleAnnouncementMode);
+        smallMobileQuery.addListener(handleAnnouncementMode);
+    }
+})();
+</script>
+
 </body>
 </html>
