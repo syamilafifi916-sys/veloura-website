@@ -189,7 +189,7 @@ export default async function handler(req, res) {
     const response = await fetch(`${apiBaseUrl}${requestTarget}`, {
       method: "POST",
       headers: {
-        Authorization: Buffer.from(`${process.env.DOKU_API_KEY}:`).toString("base64"),
+        Authorization: `Basic ${Buffer.from(`${process.env.DOKU_API_KEY}:`).toString("base64")}`,
         "Client-Id": process.env.DOKU_CLIENT_ID,
         "Request-Id": requestId,
         "Request-Timestamp": timestamp,
