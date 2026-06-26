@@ -32,6 +32,7 @@ textarea{min-height:100px;resize:vertical}
 .small{font-size:13px;color:var(--text-light)}
 .summary-row{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:15px;color:var(--text)}
 .summary-row.discount{color:#2e7d32;font-weight:800}
+.summary-row.shipping{font-weight:800;color:var(--text)}
 .total{display:flex;justify-content:space-between;align-items:center;margin-top:18px;font-size:22px;font-weight:900;color:var(--neutral-dark)}
 button{width:100%;padding:15px;border:none;border-radius:var(--radius);background:var(--primary);color:white;font-weight:900;margin-top:18px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px}
 button:hover{background:var(--primary-dark)}
@@ -113,8 +114,8 @@ select{
     <div class="card">
       <h1>Checkout</h1>
       <form id="checkoutForm">
-        <label>Full Name</label>
-        <input id="customerName" required placeholder="Nama penuh">
+        <label>Name</label>
+        <input id="customerName" required placeholder="Full name">
 
         <div class="row">
           <div>
@@ -127,8 +128,8 @@ select{
           </div>
         </div>
 
-        <label>Address</label>
-        <textarea id="address" required placeholder="Alamat penghantaran penuh"></textarea>
+        <label>Full Address</label>
+        <textarea id="address" required placeholder="Full Address"></textarea>
 
         <div class="row">
           <div>
@@ -153,7 +154,7 @@ select{
         </select>
 
         <button type="submit" id="placeOrderBtn">Place Order</button>
-        <div class="notice">Selepas klik Place Order, anda akan dibawa ke halaman pembayaran DOKU.</div>
+        <div class="notice">After clicking Place Order, you will be redirected to DOKU's secure payment page.</div>
         <div class="error" id="errorMsg"></div>
       </form>
     </div>
@@ -163,6 +164,7 @@ select{
       <div id="orderItems"></div>
       <div class="summary-row" id="subtotalRow" style="display:none"><span>Subtotal</span><span>RM <span id="orderSubtotal">0</span></span></div>
       <div class="summary-row discount" id="discountRow" style="display:none"><span>Discount <span id="discountCode"></span></span><span>-RM <span id="discountAmount">0</span></span></div>
+      <div class="summary-row shipping" id="shippingRow"><span>Shipping <span id="shippingLabel">(West Malaysia)</span></span><span>RM <span id="shippingAmount">10</span></span></div>
       <div class="total"><span>Total</span><span>RM <span id="orderTotal">0</span></span></div>
     </div>
   </div>
@@ -194,6 +196,9 @@ const subtotalRow = document.getElementById("subtotalRow");
 const discountRow = document.getElementById("discountRow");
 const discountCode = document.getElementById("discountCode");
 const discountAmountEl = document.getElementById("discountAmount");
+const shippingAmountEl = document.getElementById("shippingAmount");
+const shippingLabel = document.getElementById("shippingLabel");
+const stateSelect = document.getElementById("state");
 const errorMsg = document.getElementById("errorMsg");
 const placeOrderBtn = document.getElementById("placeOrderBtn");
 
@@ -205,18 +210,37 @@ function itemPrice(item) {
   return Number(item.salePrice || item.price || item.unitPrice || 0);
 }
 
+function getShippingFee(state = '') {
+  const normalized = String(state || '').trim().toLowerCase();
+  return ['sabah', 'sarawak'].includes(normalized) ? 18 : 10;
+}
+
 const cartSubtotal = cart.reduce((sum,item) => sum + itemPrice(item) * Number(item.qty || 1), 0);
 const promoDiscount = Number(checkoutSummary?.discountAmount || appliedPromo?.discountAmount || 0);
-const totalAmount = Math.max(Number(checkoutSummary?.total || (cartSubtotal - promoDiscount)) || 0, 0);
-orderTotal.textContent = money(totalAmount);
+let shippingFee = Number(checkoutSummary?.shippingFee || 10);
+let totalAmount = 0;
 
-if (promoDiscount > 0) {
-  if (subtotalRow) subtotalRow.style.display = "flex";
-  if (discountRow) discountRow.style.display = "flex";
+function updateOrderSummary() {
+  shippingFee = getShippingFee(stateSelect?.value || checkoutSummary?.state || '');
+  totalAmount = Math.max(cartSubtotal - promoDiscount + shippingFee, 0);
+
   if (orderSubtotal) orderSubtotal.textContent = money(cartSubtotal);
-  if (discountAmountEl) discountAmountEl.textContent = money(promoDiscount);
-  if (discountCode) discountCode.textContent = appliedPromo?.code ? `(${appliedPromo.code})` : "";
+  if (subtotalRow) subtotalRow.style.display = "flex";
+  if (shippingAmountEl) shippingAmountEl.textContent = money(shippingFee);
+  if (shippingLabel) shippingLabel.textContent = shippingFee === 18 ? "(Sabah/Sarawak)" : "(West Malaysia)";
+  if (orderTotal) orderTotal.textContent = money(totalAmount);
+
+  if (promoDiscount > 0) {
+    if (discountRow) discountRow.style.display = "flex";
+    if (discountAmountEl) discountAmountEl.textContent = money(promoDiscount);
+    if (discountCode) discountCode.textContent = appliedPromo?.code ? `(${appliedPromo.code})` : "";
+  } else if (discountRow) {
+    discountRow.style.display = "none";
+  }
 }
+
+updateOrderSummary();
+if (stateSelect) stateSelect.addEventListener('change', updateOrderSummary);
 
 if(cart.length === 0) {
   orderItems.innerHTML = "<p>Your cart is empty.</p>";
@@ -240,10 +264,11 @@ document.getElementById("checkoutForm").addEventListener("submit", async (e) => 
   errorMsg.textContent = "";
 
   if(cart.length === 0) {
-    errorMsg.textContent = "Cart kosong.";
+    errorMsg.textContent = "Your cart is empty.";
     return;
   }
 
+  updateOrderSummary();
   placeOrderBtn.disabled = true;
   placeOrderBtn.textContent = "Submitting...";
 
@@ -268,6 +293,8 @@ document.getElementById("checkoutForm").addEventListener("submit", async (e) => 
     })),
 subtotalAmount: cartSubtotal,
 discountAmount: promoDiscount,
+shippingAmount: shippingFee,
+shippingRegion: shippingFee === 18 ? "Sabah/Sarawak" : "West Malaysia",
 promoCode: appliedPromo?.code || "",
 promo: appliedPromo || null,
 totalAmount,
@@ -309,6 +336,8 @@ createdAt: serverTimestamp()
         })),
         subtotal: cartSubtotal,
         discount: promoDiscount,
+        shipping: shippingFee,
+        shippingRegion: shippingFee === 18 ? "Sabah/Sarawak" : "West Malaysia",
         promo: appliedPromo || null,
         total: totalAmount
       })
@@ -331,7 +360,7 @@ createdAt: serverTimestamp()
 
   } catch(error) {
     console.error(error);
-    errorMsg.textContent = "Payment gagal dimulakan. Sila cuba lagi.";
+    errorMsg.textContent = "Payment could not be initiated. Please try again.";
     placeOrderBtn.disabled = false;
     placeOrderBtn.textContent = "Place Order";
   }

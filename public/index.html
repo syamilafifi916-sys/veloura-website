@@ -795,6 +795,7 @@ img { max-width: 100%; height: auto; display: block; }
         .promo-box.expanded .promo-toggle { margin-bottom:12px; }
         .cart-summary-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; color: var(--text); font-size:.95rem; }
         .cart-summary-row.discount { color: var(--success); font-weight:700; }
+        .cart-summary-row.shipping { color: var(--text); font-weight:600; }
 
 .overlay {
             position: fixed;
@@ -3543,6 +3544,7 @@ html body #productModal .product-thumb-btn{
             </div>
             <div class="cart-summary-row"><span>Subtotal</span><span>RM <span id="cartSubtotal">0</span></span></div>
             <div class="cart-summary-row discount" id="cartDiscountRow" style="display:none"><span>Discount <span id="cartDiscountCode"></span></span><span>- RM <span id="cartDiscount">0</span></span></div>
+            <div class="cart-summary-row shipping" id="cartShippingRow"><span>Shipping <span id="cartShippingLabel">(West Malaysia)</span></span><span>RM <span id="cartShipping">10.00</span></span></div>
             <div class="cart-total"><span class="cart-total-label">Total</span><span class="cart-total-amount">RM <span id="cartTotal">0</span></span></div>
             <div class="cart-agreements">
                 <div class="cart-agreement"><input type="checkbox" id="agreeTerms"><label for="agreeTerms">I confirm that I have reviewed and agree to VELOURA's Terms & Conditions.</label></div>
@@ -3701,6 +3703,9 @@ html body #productModal .product-thumb-btn{
         const cartDiscount = document.getElementById('cartDiscount');
         const cartDiscountRow = document.getElementById('cartDiscountRow');
         const cartDiscountCode = document.getElementById('cartDiscountCode');
+        const cartShipping = document.getElementById('cartShipping');
+        const cartShippingRow = document.getElementById('cartShippingRow');
+        const cartShippingLabel = document.getElementById('cartShippingLabel');
         const promoBox = document.getElementById('promoBox');
         const promoToggle = document.getElementById('promoToggle');
         const promoCollapsible = document.getElementById('promoCollapsible');
@@ -3891,6 +3896,11 @@ html body #productModal .product-thumb-btn{
             return cart.reduce((sum, item) => sum + (Number(item.salePrice || item.price || 0) * item.qty), 0);
         }
 
+        function getShippingFee(state = '') {
+            const normalized = String(state || '').trim().toLowerCase();
+            return ['sabah', 'sarawak'].includes(normalized) ? 18 : 10;
+        }
+
         function calculateDiscount(promo, subtotal) {
             if (!promo || !subtotal) return 0;
             const type = String(promo.type || '').toLowerCase();
@@ -3975,11 +3985,11 @@ html body #productModal .product-thumb-btn{
             const code = String(promoCodeInput?.value || '').trim().toUpperCase();
             const subtotal = getCartSubtotal();
             if (!code) {
-                setPromoMessage('Masukkan promo code terlebih dahulu.', 'error');
+                setPromoMessage('Please enter a promo code first.', 'error');
                 return;
             }
             if (subtotal <= 0) {
-                setPromoMessage('Shopping bag masih kosong.', 'error');
+                setPromoMessage('Your shopping bag is empty.', 'error');
                 return;
             }
 
@@ -4009,15 +4019,15 @@ html body #productModal .product-thumb-btn{
                     usedCount: Number(promoDoc.usedCount || 0),
                     discountAmount: toMoneyNumber(discountAmount),
                     subtotalBeforeDiscount: toMoneyNumber(subtotal),
-                    finalTotal: toMoneyNumber(Math.max(0, subtotal - discountAmount)),
-                    finalTotalFormatted: formatMoney(Math.max(0, subtotal - discountAmount))
+                    finalTotal: toMoneyNumber(Math.max(0, subtotal - discountAmount + getShippingFee())),
+                    finalTotalFormatted: formatMoney(Math.max(0, subtotal - discountAmount + getShippingFee()))
                 };
                 localStorage.setItem('veloura_applied_promo', JSON.stringify(appliedPromo));
                 renderCart();
                 setPromoMessage(`${appliedPromo.code} applied. You saved RM ${formatMoney(discountAmount)}.`, 'success');
             } catch (error) {
                 console.error('Promo code error:', error);
-                setPromoMessage('Promo code tidak dapat disemak. Sila cuba lagi.', 'error');
+                setPromoMessage('Promo code could not be checked. Please try again.', 'error');
             }
         }
 
@@ -4040,7 +4050,8 @@ html body #productModal .product-thumb-btn{
             }
             updatePromoVisibility(!!appliedPromo);
             const discountAmount = appliedPromo ? calculateDiscount(appliedPromo, subtotal) : 0;
-            const total = Math.max(0, subtotal - discountAmount);
+            const shippingFee = cart.length > 0 ? getShippingFee() : 0;
+            const total = Math.max(0, subtotal - discountAmount + shippingFee);
             if (appliedPromo) {
                 appliedPromo.discountAmount = toMoneyNumber(discountAmount);
                 appliedPromo.subtotalBeforeDiscount = toMoneyNumber(subtotal);
@@ -4052,6 +4063,9 @@ html body #productModal .product-thumb-btn{
             if (cartSubtotal) cartSubtotal.textContent = formatMoney(subtotal);
             if (cartDiscount) cartDiscount.textContent = formatMoney(discountAmount);
             if (cartDiscountCode) cartDiscountCode.textContent = appliedPromo ? `(${appliedPromo.code})` : '';
+            if (cartShipping) cartShipping.textContent = formatMoney(shippingFee);
+            if (cartShippingLabel) cartShippingLabel.textContent = shippingFee === 18 ? '(Sabah/Sarawak)' : '(West Malaysia)';
+            if (cartShippingRow) cartShippingRow.style.display = cart.length > 0 ? 'flex' : 'none';
             if (cartDiscountRow) cartDiscountRow.style.display = appliedPromo && discountAmount > 0 ? 'flex' : 'none';
             if (removePromoBtn) removePromoBtn.style.display = appliedPromo ? 'inline-block' : 'none';
             if (promoCodeInput && appliedPromo) promoCodeInput.value = appliedPromo.code;
@@ -4062,6 +4076,7 @@ html body #productModal .product-thumb-btn{
                 localStorage.removeItem('veloura_applied_promo');
                 if (promoCodeInput) promoCodeInput.value = '';
                 if (cartDiscountRow) cartDiscountRow.style.display = 'none';
+                if (cartShippingRow) cartShippingRow.style.display = 'none';
                 if (removePromoBtn) removePromoBtn.style.display = 'none';
                 setPromoMessage('', '');
                 cartItems.innerHTML = `
@@ -4234,7 +4249,7 @@ function openProductModal(productId) {
 
         function checkout() {
             if (cart.length === 0) {
-                alert('Shopping bag masih kosong.');
+                alert('Your shopping bag is empty.');
                 return;
             }
 
@@ -4244,17 +4259,21 @@ function openProductModal(productId) {
             const agreeExchange = document.getElementById('agreeExchange').checked;
 
             if (!agreeTerms || !agreePreorder || !agreeFinal || !agreeExchange) {
-                alert('Sila tick semua checkout agreement sebelum proceed.');
+                alert('Please tick all checkout agreements before proceeding.');
                 return;
             }
 
             const subtotal = getCartSubtotal();
             const discountAmount = appliedPromo ? calculateDiscount(appliedPromo, subtotal) : 0;
-            const finalTotal = Math.max(0, subtotal - discountAmount);
+            const shippingFee = getShippingFee();
+            const finalTotal = Math.max(0, subtotal - discountAmount + shippingFee);
             const checkoutSummary = {
                 subtotalBeforeDiscount: toMoneyNumber(subtotal),
                 discountAmount: toMoneyNumber(discountAmount),
+                shippingFee: toMoneyNumber(shippingFee),
+                shippingRegion: 'West Malaysia',
                 finalTotal: toMoneyNumber(finalTotal),
+                total: toMoneyNumber(finalTotal),
                 finalTotalFormatted: formatMoney(finalTotal),
                 promo: appliedPromo || null
             };
