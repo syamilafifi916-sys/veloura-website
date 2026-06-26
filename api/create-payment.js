@@ -12,35 +12,51 @@ function makeOrderNumber() {
   return "VEL-" + Date.now().toString(36).toUpperCase();
 }
 
-function normalizePhone(phone) {
-  return String(phone || "").replace(/\D/g, "");
+function makeRequestId() {
+  return crypto.randomUUID();
 }
 
-function generatePaymentIntentChecksum(payload, secretKey) {
-  const sortedKeys = Object.keys(payload).sort();
+function normalizePhoneMY(phone) {
+  const digits = String(phone || "").replace(/\D/g, "");
+  if (!digits) return "+60000000000";
+  if (digits.startsWith("60")) return `+${digits}`;
+  if (digits.startsWith("0")) return `+6${digits}`;
+  return `+60${digits}`;
+}
 
-  const payloadString = sortedKeys
-    .map((key) => String(payload[key] ?? "").trim())
-    .join("|");
+function addMinutes(date, minutes) {
+  return new Date(date.getTime() + minutes * 60 * 1000).toISOString();
+}
 
-  return crypto
+function generateDigest(jsonBody) {
+  return crypto.createHash("sha256").update(jsonBody, "utf8").digest("base64");
+}
+
+function generateSignature({ clientId, requestId, timestamp, requestTarget, digest, secretKey }) {
+  let component = `Client-Id:${clientId}`;
+  component += `\nRequest-Id:${requestId}`;
+  component += `\nRequest-Timestamp:${timestamp}`;
+  component += `\nRequest-Target:${requestTarget}`;
+
+  if (digest) {
+    component += `\nDigest:${digest}`;
+  }
+
+  const signature = crypto
     .createHmac("sha256", String(secretKey || "").trim())
-    .update(payloadString)
-    .digest("hex");
+    .update(component)
+    .digest("base64");
+
+  return `HMACSHA256=${signature}`;
 }
 
-function findPaymentUrl(result) {
+function findCheckoutUrl(result) {
   return (
-    result?.url ||
-    result?.payment_url ||
+    result?.payment?.checkout_url ||
+    result?.checkout_experience?.checkout_url ||
+    result?.checkout_url ||
     result?.paymentUrl ||
     result?.redirect_url ||
-    result?.redirectUrl ||
-    result?.data?.url ||
-    result?.data?.payment_url ||
-    result?.data?.redirect_url ||
-    result?.payment_intent?.url ||
-    result?.payment_intent?.payment_url ||
     null
   );
 }
@@ -63,9 +79,9 @@ export default async function handler(req, res) {
     }
 
     const requiredEnv = [
-      "BAYARCASH_PAT",
-      "BAYARCASH_SECRET_KEY",
-      "BAYARCASH_PORTAL_KEY",
+      "DOKU_CLIENT_ID",
+      "DOKU_SECRET_KEY",
+      "DOKU_API_KEY",
       "SITE_URL",
       "FIREBASE_SERVICE_ACCOUNT"
     ];
@@ -80,6 +96,12 @@ export default async function handler(req, res) {
 
     const orderNumber = makeOrderNumber();
     const amount = Number(total);
+    const siteUrl = String(process.env.SITE_URL || "").replace(/\/$/, "");
+    const apiBaseUrl = process.env.DOKU_API_BASE_URL || "https://api.doku.com";
+    const requestTarget = "/v3/checkouts";
+    const requestId = makeRequestId();
+    const timestamp = new Date().toISOString();
+    const expiredAt = addMinutes(new Date(), Number(process.env.DOKU_PAYMENT_DUE_DATE || 60));
 
     const orderRef = await db().collection("Orders").add({
       orderNumber,
@@ -91,10 +113,10 @@ export default async function handler(req, res) {
       city: customer.city || "",
       state: customer.state || "",
       items,
-      totalAmount: Number(total),
+      totalAmount: amount,
       currency: "MYR",
       paymentStatus: "unpaid",
-      paymentMethod: "bayarcash",
+      paymentMethod: "doku",
       paymentReference: "",
       status: "pending",
       source: "website",
@@ -102,79 +124,106 @@ export default async function handler(req, res) {
       updatedAt: new Date().toISOString()
     });
 
-    const returnUrl =
-  `${process.env.SITE_URL}/payment-status.html?order=${encodeURIComponent(orderNumber)}&id=${orderRef.id}`;
-
-    const metadata = JSON.stringify({
-      orderId: orderRef.id,
-      orderNumber
-    });
-
     const paymentPayload = {
-      payment_channel: Number(process.env.BAYARCASH_PAYMENT_CHANNEL || 5),
-      portal_key: process.env.BAYARCASH_PORTAL_KEY,
-      order_number: orderNumber,
-      amount,
-      payer_name: customer.name,
-      payer_email: customer.email,
-      payer_telephone_number: normalizePhone(customer.phone),
-      payer_bank_code: customer.bankCode || "",
-      payer_bank_name: customer.bankName || "",
-      metadata,
-      return_url: returnUrl,
-callback_url: `${process.env.SITE_URL}/api/bayarcash-callback?orderId=${orderRef.id}`,
-      platform_id: process.env.BAYARCASH_PLATFORM_ID || "veloura"
+      id: orderRef.id,
+      order: {
+        amount,
+        invoice_number: orderNumber,
+        currency: process.env.DOKU_CURRENCY || "MYR",
+        line_items: items.map((item, index) => ({
+          id: String(item.productId || item.id || index + 1),
+          name: String(item.name || "Veloura Item").slice(0, 100),
+          quantity: Number(item.qty || 1),
+          price: Number(item.price || item.subtotal || 0)
+        })),
+        expired_at: expiredAt
+      },
+      checkout_experience: {
+        language: "EN",
+        auto_redirect: true,
+        retry_payment: {
+          enabled: true
+        },
+        callback_url: `${siteUrl}/payment-status.html?order=${encodeURIComponent(orderNumber)}&id=${orderRef.id}`,
+        callback_url_cancel: `${siteUrl}/checkout.html`,
+        callback_url_result: `${siteUrl}/payment-status.html?order=${encodeURIComponent(orderNumber)}&id=${orderRef.id}`
+      },
+      payment: {
+        type: "SALE"
+      },
+      metadata: {
+        orderId: orderRef.id,
+        orderNumber
+      },
+      customer: {
+        id: orderRef.id,
+        name: customer.name,
+        email: customer.email,
+        phone: normalizePhoneMY(customer.phone),
+        country: "MY",
+        address: customer.address || ""
+      },
+      shipping_address: {
+        first_name: customer.name.split(" ")[0] || customer.name,
+        last_name: customer.name.split(" ").slice(1).join(" ") || "-",
+        address: customer.address || "",
+        city: customer.city || "",
+        postal_code: customer.postcode || "",
+        phone: normalizePhoneMY(customer.phone),
+        country_code: "MY"
+      }
     };
 
-    const checksumPayload = {
-  payment_channel: paymentPayload.payment_channel,
-  order_number: paymentPayload.order_number,
-  amount: paymentPayload.amount,
-  payer_name: paymentPayload.payer_name,
-  payer_email: paymentPayload.payer_email
-};
+    const jsonBody = JSON.stringify(paymentPayload);
+    const digest = generateDigest(jsonBody);
 
-paymentPayload.checksum = generatePaymentIntentChecksum(
-  checksumPayload,
-  process.env.BAYARCASH_SECRET_KEY
-);
+    const signature = generateSignature({
+      clientId: process.env.DOKU_CLIENT_ID,
+      requestId,
+      timestamp,
+      requestTarget,
+      digest,
+      secretKey: process.env.DOKU_SECRET_KEY
+    });
 
-    const response = await fetch(
-      "https://api.console.bayar.cash/v3/payment-intents",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${process.env.BAYARCASH_PAT}`,
-          "Content-Type": "application/json",
-          Accept: "application/json"
-        },
-        body: JSON.stringify(paymentPayload)
-      }
-    );
+    const response = await fetch(`${apiBaseUrl}${requestTarget}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${process.env.DOKU_API_KEY}:`).toString("base64")}`,
+        "Client-Id": process.env.DOKU_CLIENT_ID,
+        "Request-Id": requestId,
+        "Request-Timestamp": timestamp,
+        "Request-Target": requestTarget,
+        "API-Version": process.env.DOKU_API_VERSION || "arabica.2025-12-01",
+        Signature: signature,
+        Digest: digest,
+        "Content-Type": "application/json",
+        Accept: "application/json"
+      },
+      body: jsonBody
+    });
 
     const result = await response.json().catch(() => ({}));
 
     await orderRef.update({
-      bayarcashPayload: {
-        ...paymentPayload,
-        checksum: "[hidden]"
-      },
-      bayarcashResponse: result,
+      dokuPayload: paymentPayload,
+      dokuResponse: result,
+      dokuRequestId: requestId,
       updatedAt: new Date().toISOString()
     });
 
     if (!response.ok) {
       return json(res, response.status, {
-        error: "Bayarcash payment creation failed",
+        error: "DOKU payment creation failed",
         details: result
       });
     }
 
-    const paymentUrl = findPaymentUrl(result);
+    const paymentUrl = findCheckoutUrl(result);
 
     if (!paymentUrl) {
       return json(res, 500, {
-        error: "Bayarcash payment URL not found in response",
+        error: "DOKU checkout URL not found in response",
         details: result
       });
     }
@@ -183,7 +232,7 @@ paymentPayload.checksum = generatePaymentIntentChecksum(
       orderId: orderRef.id,
       orderNumber,
       paymentUrl,
-      mode: "live"
+      mode: "doku"
     });
 
   } catch (error) {
