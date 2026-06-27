@@ -164,7 +164,7 @@ select{
       <div id="orderItems"></div>
       <div class="summary-row" id="subtotalRow" style="display:none"><span>Subtotal</span><span>RM <span id="orderSubtotal">0</span></span></div>
       <div class="summary-row discount" id="discountRow" style="display:none"><span>Discount <span id="discountCode"></span></span><span>-RM <span id="discountAmount">0</span></span></div>
-      <div class="summary-row shipping" id="shippingRow"><span>Shipping <span id="shippingLabel">(West Malaysia)</span></span><span>RM <span id="shippingAmount">10</span></span></div>
+      <div class="summary-row shipping" id="shippingRow"><span>Shipping <span id="shippingLabel"></span></span><span id="shippingAmountText">Select State</span></div>
       <div class="total"><span>Total</span><span>RM <span id="orderTotal">0</span></span></div>
     </div>
   </div>
@@ -196,7 +196,7 @@ const subtotalRow = document.getElementById("subtotalRow");
 const discountRow = document.getElementById("discountRow");
 const discountCode = document.getElementById("discountCode");
 const discountAmountEl = document.getElementById("discountAmount");
-const shippingAmountEl = document.getElementById("shippingAmount");
+const shippingAmountText = document.getElementById("shippingAmountText");
 const shippingLabel = document.getElementById("shippingLabel");
 const stateSelect = document.getElementById("state");
 const errorMsg = document.getElementById("errorMsg");
@@ -212,22 +212,25 @@ function itemPrice(item) {
 
 function getShippingFee(state = '') {
   const normalized = String(state || '').trim().toLowerCase();
+  if (!normalized) return null;
   return ['sabah', 'sarawak'].includes(normalized) ? 18 : 10;
 }
 
 const cartSubtotal = cart.reduce((sum,item) => sum + itemPrice(item) * Number(item.qty || 1), 0);
 const promoDiscount = Number(checkoutSummary?.discountAmount || appliedPromo?.discountAmount || 0);
-let shippingFee = Number(checkoutSummary?.shippingFee || 10);
+let shippingFee = 0;
 let totalAmount = 0;
 
 function updateOrderSummary() {
-  shippingFee = getShippingFee(stateSelect?.value || checkoutSummary?.state || '');
+  const selectedState = stateSelect?.value || '';
+  const calculatedShipping = getShippingFee(selectedState);
+  shippingFee = calculatedShipping === null ? 0 : calculatedShipping;
   totalAmount = Math.max(cartSubtotal - promoDiscount + shippingFee, 0);
 
   if (orderSubtotal) orderSubtotal.textContent = money(cartSubtotal);
   if (subtotalRow) subtotalRow.style.display = "flex";
-  if (shippingAmountEl) shippingAmountEl.textContent = money(shippingFee);
-  if (shippingLabel) shippingLabel.textContent = shippingFee === 18 ? "(Sabah/Sarawak)" : "(West Malaysia)";
+  if (shippingAmountText) shippingAmountText.textContent = calculatedShipping === null ? "Select State" : `RM ${money(shippingFee)}`;
+  if (shippingLabel) shippingLabel.textContent = calculatedShipping === null ? "" : (shippingFee === 18 ? "(Sabah/Sarawak)" : "(West Malaysia)");
   if (orderTotal) orderTotal.textContent = money(totalAmount);
 
   if (promoDiscount > 0) {
@@ -265,6 +268,11 @@ document.getElementById("checkoutForm").addEventListener("submit", async (e) => 
 
   if(cart.length === 0) {
     errorMsg.textContent = "Your cart is empty.";
+    return;
+  }
+
+  if (!stateSelect?.value) {
+    errorMsg.textContent = "Please select your delivery state.";
     return;
   }
 
