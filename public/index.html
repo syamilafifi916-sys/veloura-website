@@ -4293,20 +4293,13 @@ function openProductModal(productId) {
             }
 
             try {
-                const existingSubscribers = await readCollections(["Subscribers", "subscribers"]);
-                const alreadySubscribed = existingSubscribers.some(subscriber =>
-                    String(subscriber.email || "").trim().toLowerCase() === email
-                );
-
-                if (!alreadySubscribed) {
-                    await addDoc(collection(db, "Subscribers"), {
-                        email,
-                        source: "website",
-                        status: "active",
-                        createdAt: serverTimestamp(),
-                        updatedAt: serverTimestamp()
-                    });
-                }
+                await addDoc(collection(db, "Subscribers"), {
+                    email,
+                    source: "website",
+                    status: "active",
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
+                });
 
                 alert("Thank you for becoming a Veloura Babe. We're excited to have you with us and can't wait to begin this journey together.");
                 form.reset();
@@ -4321,48 +4314,6 @@ function openProductModal(productId) {
             }
         }
 
-        function contactSubmit(e) {
-            e.preventDefault();
-            alert("Thank you. We'll get in touch soon.");
-            e.target.reset();
-        }
-
-        menuToggle.addEventListener('click', openMenu);
-        mobileMenuClose.addEventListener('click', closeMenu);
-        cartToggle.addEventListener('click', openCart);
-        cartDrawerClose.addEventListener('click', closeCart);
-        overlay.addEventListener('click', () => {
-            closeCart();
-            closeMenu();
-            closeProductModal();
-        });
-
-        document.getElementById('productModalClose').addEventListener('click', closeProductModal);
-        document.getElementById('prevSlide').addEventListener('click', () => changeSlide(-1));
-        document.getElementById('nextSlide').addEventListener('click', () => changeSlide(1));
-        document.getElementById('modalAddToCart').addEventListener('click', () => {
-            if (!currentProduct) return;
-            const size = selectedSize || currentProduct.sizes[0];
-            closeProductModal();
-            addToCart(currentProduct.id, size);
-        });
-
-        checkoutBtn.addEventListener('click', checkout);
-        promoToggle?.addEventListener('click', () => {
-            if (!promoBox) return;
-            promoBox.classList.toggle('expanded');
-            if (promoBox.classList.contains('expanded')) {
-                setTimeout(() => promoCodeInput?.focus(), 50);
-            }
-        });
-        applyPromoBtn?.addEventListener('click', applyPromoCode);
-        removePromoBtn?.addEventListener('click', removePromoCode);
-        promoCodeInput?.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                applyPromoCode();
-            }
-        });
         newsletterForm.addEventListener('submit', subscribe);
 
         document.querySelectorAll('.mobile-nav-link').forEach(link => {
