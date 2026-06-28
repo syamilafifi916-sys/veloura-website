@@ -3771,25 +3771,38 @@ html body #productModal .product-thumb-btn{
         }
 
         async function loadProductsFromFirestore() {
-            // Show the catalog immediately so the main page never appears empty
-            // while Firestore is loading, blocked by rules, or temporarily unavailable.
-            products = FALLBACK_PRODUCTS;
-            renderProducts();
+            productsGrid.innerHTML = `
+                <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-light);">
+                    Loading Veloura collection...
+                </div>
+            `;
 
             try {
                 const snapshot = await getDocs(collection(db, "Products"));
-                const firestoreProducts = snapshot.docs
+                products = snapshot.docs
                     .map(doc => normalizeProduct(doc.id, doc.data()))
                     .filter(product => product.status === "active");
 
-                if (firestoreProducts.length > 0) {
-                    products = firestoreProducts;
-                    renderProducts();
+                if (products.length === 0) {
+                    products = FALLBACK_PRODUCTS;
+                    productsGrid.innerHTML = `
+                        <div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--text-light);">
+                            No active product found in Firestore. Showing fallback product.
+                        </div>
+                    `;
                 }
+
+                renderProducts();
             } catch (error) {
                 console.error("Firestore product load error:", error);
                 products = FALLBACK_PRODUCTS;
                 renderProducts();
+
+                productsGrid.insertAdjacentHTML("afterbegin", `
+                    <div style="grid-column:1/-1;background:#fff3f3;border:1px solid #ffd0d0;border-radius:12px;padding:16px;color:#8a2a2a;margin-bottom:10px;">
+                        Product database cannot be read yet. Check Firestore Rules for collection <strong>Products</strong>.
+                    </div>
+                `);
             }
         }
 
@@ -4277,6 +4290,50 @@ function openProductModal(productId) {
                 }
             }
         }
+
+
+        function contactSubmit(e) {
+            e.preventDefault();
+            alert("Thank you. We'll get in touch soon.");
+            e.target.reset();
+        }
+
+        menuToggle.addEventListener('click', openMenu);
+        mobileMenuClose.addEventListener('click', closeMenu);
+        cartToggle.addEventListener('click', openCart);
+        cartDrawerClose.addEventListener('click', closeCart);
+        overlay.addEventListener('click', () => {
+            closeCart();
+            closeMenu();
+            closeProductModal();
+        });
+
+        document.getElementById('productModalClose').addEventListener('click', closeProductModal);
+        document.getElementById('prevSlide').addEventListener('click', () => changeSlide(-1));
+        document.getElementById('nextSlide').addEventListener('click', () => changeSlide(1));
+        document.getElementById('modalAddToCart').addEventListener('click', () => {
+            if (!currentProduct) return;
+            const size = selectedSize || currentProduct.sizes[0];
+            closeProductModal();
+            addToCart(currentProduct.id, size);
+        });
+
+        checkoutBtn.addEventListener('click', checkout);
+        promoToggle?.addEventListener('click', () => {
+            if (!promoBox) return;
+            promoBox.classList.toggle('expanded');
+            if (promoBox.classList.contains('expanded')) {
+                setTimeout(() => promoCodeInput?.focus(), 50);
+            }
+        });
+        applyPromoBtn?.addEventListener('click', applyPromoCode);
+        removePromoBtn?.addEventListener('click', removePromoCode);
+        promoCodeInput?.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                applyPromoCode();
+            }
+        });
 
         newsletterForm.addEventListener('submit', subscribe);
 
