@@ -3740,29 +3740,6 @@ html body #productModal .product-thumb-btn{
         }
 
         function applyFrontendProductImageOverrides(product) {
-            const productText = `${product.id || ''} ${product.name || ''}`
-                .normalize('NFD')
-                .replace(/[̀-ͯ]/g, '')
-                .toLowerCase();
-
-            const isIvoryLuxe = productText.includes('ivory luxe') || productText.includes('ivory-luxe');
-            if (isIvoryLuxe) {
-                return {
-                    ...product,
-                    image: IVORY_LUXE_GALLERY[0],
-                    gallery: IVORY_LUXE_GALLERY
-                };
-            }
-
-            const isRoseGlow = productText.includes('rose glow') || productText.includes('rose-glow');
-            if (isRoseGlow) {
-                return {
-                    ...product,
-                    image: ROSE_GLOW_GALLERY[0],
-                    gallery: ROSE_GLOW_GALLERY
-                };
-            }
-
             return product;
         }
 

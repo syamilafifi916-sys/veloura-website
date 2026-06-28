@@ -337,6 +337,22 @@
           <input id="editImage3Url" placeholder="Third product image URL">
         </div>
         <div class="full">
+          <label>Image 4 URL</label>
+          <input id="editImage4Url" placeholder="Fourth product image URL">
+        </div>
+        <div class="full">
+          <label>Image 5 URL</label>
+          <input id="editImage5Url" placeholder="Fifth product image URL">
+        </div>
+        <div class="full">
+          <label>Image 6 URL</label>
+          <input id="editImage6Url" placeholder="Sixth product image URL">
+        </div>
+        <div class="full">
+          <label>Image 7 URL</label>
+          <input id="editImage7Url" placeholder="Seventh product image URL">
+        </div>
+        <div class="full">
           <div id="editImagePreviewRow" class="image-preview-row"></div>
         </div>
         <div class="full">
@@ -429,11 +445,15 @@ function productImages(product){
   const images = [];
   if (Array.isArray(product.images)) images.push(...product.images);
   if (Array.isArray(product.gallery)) images.push(...product.gallery);
-  [product.image1Url, product.image2Url, product.image3Url, product.imageUrl, product.image].forEach(url => {
+  [
+    product.image1Url, product.image2Url, product.image3Url, product.image4Url, product.image5Url, product.image6Url, product.image7Url,
+    product.image1, product.image2, product.image3, product.image4, product.image5, product.image6, product.image7,
+    product.imageUrl, product.image
+  ].forEach(url => {
     if (url) images.push(url);
   });
   const clean = images.map(url => String(url || "").trim()).filter(Boolean);
-  return [...new Set(clean)].slice(0, 3);
+  return [...new Set(clean)].slice(0, 7);
 }
 
 function firstProductImage(product){
@@ -443,7 +463,7 @@ function firstProductImage(product){
 function renderImagePreviews(){
   const row = document.getElementById("editImagePreviewRow");
   if (!row) return;
-  const urls = ["editImage1Url", "editImage2Url", "editImage3Url"]
+  const urls = ["editImage1Url", "editImage2Url", "editImage3Url", "editImage4Url", "editImage5Url", "editImage6Url", "editImage7Url"]
     .map(id => document.getElementById(id)?.value.trim())
     .filter(Boolean);
 
@@ -1044,6 +1064,10 @@ window.openEditProductModal = function(id){
   document.getElementById("editImage1Url").value = images[0] || "";
   document.getElementById("editImage2Url").value = images[1] || "";
   document.getElementById("editImage3Url").value = images[2] || "";
+  document.getElementById("editImage4Url").value = images[3] || "";
+  document.getElementById("editImage5Url").value = images[4] || "";
+  document.getElementById("editImage6Url").value = images[5] || "";
+  document.getElementById("editImage7Url").value = images[6] || "";
   document.getElementById("editCaption").value = product.caption || product.shortDescription || DEFAULT_PRODUCT_CAPTION;
   document.getElementById("editDescription").value = product.description || DEFAULT_PRODUCT_DESCRIPTION;
 
@@ -1063,7 +1087,7 @@ window.closeEditProductModal = function(){
   document.getElementById("editProductModal").setAttribute("aria-hidden", "true");
 };
 
-["editImage1Url", "editImage2Url", "editImage3Url"].forEach(id => {
+["editImage1Url", "editImage2Url", "editImage3Url", "editImage4Url", "editImage5Url", "editImage6Url", "editImage7Url"].forEach(id => {
   document.getElementById(id)?.addEventListener("input", renderImagePreviews);
 });
 
@@ -1080,30 +1104,24 @@ document.getElementById("editProductForm").addEventListener("submit", async (e) 
 
   try {
     const selectedStatus = document.getElementById("editStatus").value || "active";
+    const imageFields = ["editImage1Url", "editImage2Url", "editImage3Url", "editImage4Url", "editImage5Url", "editImage6Url", "editImage7Url"];
+    const imageValues = imageFields.map(fieldId => document.getElementById(fieldId)?.value.trim()).filter(Boolean);
 
     const updateData = {
       name: document.getElementById("editName").value.trim(),
       price: Number(document.getElementById("editPrice").value || 0),
       oriPrice: Number(document.getElementById("editOriPrice").value || 0),
       status: selectedStatus,
-      imageUrl: [
-        document.getElementById("editImage1Url").value.trim(),
-        document.getElementById("editImage2Url").value.trim(),
-        document.getElementById("editImage3Url").value.trim()
-      ].filter(Boolean)[0] || "",
+      imageUrl: imageValues[0] || "",
       image1Url: document.getElementById("editImage1Url").value.trim(),
       image2Url: document.getElementById("editImage2Url").value.trim(),
       image3Url: document.getElementById("editImage3Url").value.trim(),
-      images: [
-        document.getElementById("editImage1Url").value.trim(),
-        document.getElementById("editImage2Url").value.trim(),
-        document.getElementById("editImage3Url").value.trim()
-      ].filter(Boolean),
-      gallery: [
-        document.getElementById("editImage1Url").value.trim(),
-        document.getElementById("editImage2Url").value.trim(),
-        document.getElementById("editImage3Url").value.trim()
-      ].filter(Boolean),
+      image4Url: document.getElementById("editImage4Url").value.trim(),
+      image5Url: document.getElementById("editImage5Url").value.trim(),
+      image6Url: document.getElementById("editImage6Url").value.trim(),
+      image7Url: document.getElementById("editImage7Url").value.trim(),
+      images: imageValues,
+      gallery: imageValues,
       caption: document.getElementById("editCaption").value.trim() || DEFAULT_PRODUCT_CAPTION,
       shortDescription: document.getElementById("editCaption").value.trim() || DEFAULT_PRODUCT_CAPTION,
       description: document.getElementById("editDescription").value.trim() || DEFAULT_PRODUCT_DESCRIPTION,
