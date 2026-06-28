@@ -203,7 +203,11 @@ const errorMsg = document.getElementById("errorMsg");
 const placeOrderBtn = document.getElementById("placeOrderBtn");
 
 function money(value) {
-  return Number(value || 0).toFixed(0);
+  return Number(value || 0).toFixed(2);
+}
+
+function toMoneyNumber(value) {
+  return Number(money(value));
 }
 
 function itemPrice(item) {
@@ -216,8 +220,8 @@ function getShippingFee(state = '') {
   return ['sabah', 'sarawak'].includes(normalized) ? 18 : 10;
 }
 
-const cartSubtotal = cart.reduce((sum,item) => sum + itemPrice(item) * Number(item.qty || 1), 0);
-const promoDiscount = Number(checkoutSummary?.discountAmount || appliedPromo?.discountAmount || 0);
+const cartSubtotal = toMoneyNumber(cart.reduce((sum,item) => sum + itemPrice(item) * Number(item.qty || 1), 0));
+const promoDiscount = toMoneyNumber(checkoutSummary?.discountAmount || appliedPromo?.discountAmount || 0);
 let shippingFee = 0;
 let totalAmount = 0;
 
@@ -225,7 +229,7 @@ function updateOrderSummary() {
   const selectedState = stateSelect?.value || '';
   const calculatedShipping = getShippingFee(selectedState);
   shippingFee = calculatedShipping === null ? 0 : calculatedShipping;
-  totalAmount = Math.max(cartSubtotal - promoDiscount + shippingFee, 0);
+  totalAmount = toMoneyNumber(Math.max(cartSubtotal - promoDiscount + shippingFee, 0));
 
   if (orderSubtotal) orderSubtotal.textContent = money(cartSubtotal);
   if (subtotalRow) subtotalRow.style.display = "flex";
@@ -296,16 +300,16 @@ document.getElementById("checkoutForm").addEventListener("submit", async (e) => 
       name: item.name,
       size: item.size || "",
       qty: Number(item.qty || 1),
-      price: itemPrice(item),
-      subtotal: itemPrice(item) * Number(item.qty || 1)
+      price: toMoneyNumber(itemPrice(item)),
+      subtotal: toMoneyNumber(itemPrice(item) * Number(item.qty || 1))
     })),
 subtotalAmount: cartSubtotal,
 discountAmount: promoDiscount,
-shippingAmount: shippingFee,
+shippingAmount: toMoneyNumber(shippingFee),
 shippingRegion: shippingFee === 18 ? "Sabah/Sarawak" : "West Malaysia",
 promoCode: appliedPromo?.code || "",
 promo: appliedPromo || null,
-totalAmount,
+totalAmount: toMoneyNumber(totalAmount),
 
 paymentStatus: "unpaid",
 paymentMethod: "doku",
@@ -339,8 +343,8 @@ createdAt: serverTimestamp()
           name: item.name,
           size: item.size || "",
               qty: Number(item.qty || 1),
-          price: itemPrice(item),
-          subtotal: itemPrice(item) * Number(item.qty || 1)
+          price: toMoneyNumber(itemPrice(item)),
+          subtotal: toMoneyNumber(itemPrice(item) * Number(item.qty || 1))
         })),
         subtotal: cartSubtotal,
         discount: promoDiscount,

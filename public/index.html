@@ -3865,7 +3865,7 @@ html body #productModal .product-thumb-btn{
         }
 
         function getCartSubtotal() {
-            return cart.reduce((sum, item) => sum + (Number(item.salePrice || item.price || 0) * item.qty), 0);
+            return toMoneyNumber(cart.reduce((sum, item) => sum + (Number(item.salePrice || item.price || 0) * item.qty), 0));
         }
 
         function getShippingFee(state = '') {
@@ -3880,7 +3880,7 @@ html body #productModal .product-thumb-btn{
             let discount = 0;
             if (type === 'percentage' || type === 'percent') discount = subtotal * (value / 100);
             if (type === 'fixed' || type === 'amount' || type === 'rm') discount = value;
-            return Math.max(0, Math.min(discount, subtotal));
+            return toMoneyNumber(Math.max(0, Math.min(discount, subtotal)));
         }
 
         function setPromoMessage(message, type = '') {
@@ -4022,7 +4022,7 @@ html body #productModal .product-thumb-btn{
             }
             updatePromoVisibility(!!appliedPromo);
             const discountAmount = appliedPromo ? calculateDiscount(appliedPromo, subtotal) : 0;
-            const total = Math.max(0, subtotal - discountAmount);
+            const total = toMoneyNumber(Math.max(0, subtotal - discountAmount));
             if (appliedPromo) {
                 appliedPromo.discountAmount = toMoneyNumber(discountAmount);
                 appliedPromo.subtotalBeforeDiscount = toMoneyNumber(subtotal);
@@ -4235,7 +4235,7 @@ function openProductModal(productId) {
 
             const subtotal = getCartSubtotal();
             const discountAmount = appliedPromo ? calculateDiscount(appliedPromo, subtotal) : 0;
-            const finalTotal = Math.max(0, subtotal - discountAmount);
+            const finalTotal = toMoneyNumber(Math.max(0, subtotal - discountAmount));
             const checkoutSummary = {
                 subtotalBeforeDiscount: toMoneyNumber(subtotal),
                 discountAmount: toMoneyNumber(discountAmount),
