@@ -4273,10 +4273,52 @@ function openProductModal(productId) {
             window.location.href = "checkout.html";
         }
 
-        function subscribe(e) {
+        async function subscribe(e) {
             e.preventDefault();
-            alert("Thank you for becoming a Veloura Babe. We're excited to have you with us and can't wait to begin this journey together.");
-            e.target.reset();
+
+            const form = e.target;
+            const input = form.querySelector('input[type="email"]');
+            const button = form.querySelector('button[type="submit"]');
+            const email = String(input?.value || '').trim().toLowerCase();
+
+            if (!email) {
+                alert("Please enter your email address.");
+                return;
+            }
+
+            const originalButtonText = button ? button.textContent : "";
+            if (button) {
+                button.disabled = true;
+                button.textContent = "Joining...";
+            }
+
+            try {
+                const existingSubscribers = await readCollections(["Subscribers", "subscribers"]);
+                const alreadySubscribed = existingSubscribers.some(subscriber =>
+                    String(subscriber.email || "").trim().toLowerCase() === email
+                );
+
+                if (!alreadySubscribed) {
+                    await addDoc(collection(db, "Subscribers"), {
+                        email,
+                        source: "website",
+                        status: "active",
+                        createdAt: serverTimestamp(),
+                        updatedAt: serverTimestamp()
+                    });
+                }
+
+                alert("Thank you for becoming a Veloura Babe. We're excited to have you with us and can't wait to begin this journey together.");
+                form.reset();
+            } catch (error) {
+                console.error("Newsletter subscription error:", error);
+                alert("Subscription failed. Please try again.");
+            } finally {
+                if (button) {
+                    button.disabled = false;
+                    button.textContent = originalButtonText || "Join The List";
+                }
+            }
         }
 
         function contactSubmit(e) {
