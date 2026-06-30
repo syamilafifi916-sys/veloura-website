@@ -154,7 +154,7 @@ select{
         </select>
 
         <button type="submit" id="placeOrderBtn">Place Order</button>
-        <div class="notice">After clicking Place Order, you will be redirected to DOKU's secure payment page.</div>
+        <div class="notice">Free Delivery for orders RM200 and above after discount. After clicking Place Order, you will be redirected to DOKU's secure payment page.</div>
         <div class="error" id="errorMsg"></div>
       </form>
     </div>
@@ -210,14 +210,32 @@ function toMoneyNumber(value) {
   return Number(money(value));
 }
 
+const FREE_DELIVERY_THRESHOLD = 200;
+const EAST_MY_STATES = ['sabah', 'sarawak', 'labuan'];
+
 function itemPrice(item) {
   return Number(item.salePrice || item.price || item.unitPrice || 0);
+}
+
+function getProductTotalAfterDiscount() {
+  return toMoneyNumber(Math.max(cartSubtotal - promoDiscount, 0));
 }
 
 function getShippingFee(state = '') {
   const normalized = String(state || '').trim().toLowerCase();
   if (!normalized) return null;
-  return ['sabah', 'sarawak'].includes(normalized) ? 18 : 10;
+
+  const productTotal = getProductTotalAfterDiscount();
+  if (productTotal >= FREE_DELIVERY_THRESHOLD) return 0;
+
+  return EAST_MY_STATES.includes(normalized) ? 18 : 10;
+}
+
+function getShippingRegion(state = '') {
+  const normalized = String(state || '').trim().toLowerCase();
+  if (!normalized) return 'Select State';
+  if (getProductTotalAfterDiscount() >= FREE_DELIVERY_THRESHOLD) return 'Free Delivery';
+  return EAST_MY_STATES.includes(normalized) ? 'Sabah/Sarawak/Labuan' : 'West Malaysia';
 }
 
 const cartSubtotal = toMoneyNumber(cart.reduce((sum,item) => sum + itemPrice(item) * Number(item.qty || 1), 0));
@@ -229,12 +247,14 @@ function updateOrderSummary() {
   const selectedState = stateSelect?.value || '';
   const calculatedShipping = getShippingFee(selectedState);
   shippingFee = calculatedShipping === null ? 0 : calculatedShipping;
-  totalAmount = toMoneyNumber(Math.max(cartSubtotal - promoDiscount + shippingFee, 0));
+  const productTotal = getProductTotalAfterDiscount();
+  totalAmount = toMoneyNumber(Math.max(productTotal + shippingFee, 0));
+  const region = getShippingRegion(selectedState);
 
   if (orderSubtotal) orderSubtotal.textContent = money(cartSubtotal);
   if (subtotalRow) subtotalRow.style.display = "flex";
-  if (shippingAmountText) shippingAmountText.textContent = calculatedShipping === null ? "Select State" : `RM ${money(shippingFee)}`;
-  if (shippingLabel) shippingLabel.textContent = calculatedShipping === null ? "" : (shippingFee === 18 ? "(Sabah/Sarawak)" : "(West Malaysia)");
+  if (shippingAmountText) shippingAmountText.textContent = calculatedShipping === null ? "Select State" : (shippingFee === 0 ? "FREE" : `RM ${money(shippingFee)}`);
+  if (shippingLabel) shippingLabel.textContent = calculatedShipping === null ? "" : `(${region})`;
   if (orderTotal) orderTotal.textContent = money(totalAmount);
 
   if (promoDiscount > 0) {
@@ -306,7 +326,7 @@ document.getElementById("checkoutForm").addEventListener("submit", async (e) => 
 subtotalAmount: cartSubtotal,
 discountAmount: promoDiscount,
 shippingAmount: toMoneyNumber(shippingFee),
-shippingRegion: shippingFee === 18 ? "Sabah/Sarawak" : "West Malaysia",
+shippingRegion: getShippingRegion(document.getElementById("state").value),
 promoCode: appliedPromo?.code || "",
 promo: appliedPromo || null,
 totalAmount: toMoneyNumber(totalAmount),
@@ -349,7 +369,7 @@ createdAt: serverTimestamp()
         subtotal: cartSubtotal,
         discount: promoDiscount,
         shipping: shippingFee,
-        shippingRegion: shippingFee === 18 ? "Sabah/Sarawak" : "West Malaysia",
+        shippingRegion: getShippingRegion(document.getElementById("state").value),
         promo: appliedPromo || null,
         total: totalAmount
       })
