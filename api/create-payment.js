@@ -194,20 +194,7 @@ export default async function handler(req, res) {
       digest,
       secretKey: process.env.DOKU_SECRET_KEY
     });
-console.log("===== DOKU REQUEST HEADER =====");
-console.log({
-  authorization: "Basic ********",
-  clientId: process.env.DOKU_CLIENT_ID,
-  requestId,
-  timestamp,
-  requestTarget,
-  apiVersion: process.env.DOKU_API_VERSION || "arabica.2025-12-01",
-  digest,
-  signature
-});
 
-console.log("===== DOKU REQUEST BODY =====");
-console.log(JSON.stringify(paymentPayload, null, 2));
 const dokuRequestHeaders = {
   Authorization: `Basic ${Buffer.from(`${process.env.DOKU_API_KEY}:`).toString("base64")}`,
   "Client-Id": process.env.DOKU_CLIENT_ID,
@@ -237,7 +224,11 @@ console.log(JSON.stringify(paymentPayload, null, 2));
     });
 
     const result = await response.json().catch(() => ({}));
+console.log("===== DOKU RESPONSE STATUS =====");
+console.log(response.status);
 
+console.log("===== DOKU RESPONSE BODY =====");
+console.log(JSON.stringify(result, null, 2));
     await orderRef.update({
       dokuPayload: paymentPayload,
       dokuResponse: result,
