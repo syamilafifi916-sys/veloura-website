@@ -93,6 +93,15 @@ export default async function handler(req, res) {
         error: `Missing env variables: ${missingEnv.join(", ")}`
       });
     }
+    console.log("DOKU DEBUG", {
+  clientId: process.env.DOKU_CLIENT_ID,
+  apiKeyPrefix: process.env.DOKU_API_KEY?.slice(0, 9),
+  apiKeyLength: process.env.DOKU_API_KEY?.length,
+  secretKeyPrefix: process.env.DOKU_SECRET_KEY?.slice(0, 5),
+  secretKeyLength: process.env.DOKU_SECRET_KEY?.length,
+  apiBaseUrl: process.env.DOKU_API_BASE_URL,
+  apiVersion: process.env.DOKU_API_VERSION
+});
 
     const orderNumber = makeOrderNumber();
     const amount = Number(total);
