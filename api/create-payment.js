@@ -25,7 +25,10 @@ function normalizePhoneMY(phone) {
 }
 
 function addMinutes(date, minutes) {
-  return new Date(date.getTime() + minutes * 60 * 1000).toISOString();
+  return new Date(date.getTime() + minutes * 60 * 1000)
+    .toISOString()
+    .replace(/\.\d{3}Z$/, "Z");
+}
 }
 
 function generateDigest(jsonBody) {
@@ -109,7 +112,7 @@ export default async function handler(req, res) {
     const apiBaseUrl = process.env.DOKU_API_BASE_URL || "https://api.doku.com";
     const requestTarget = "/v3/checkouts";
     const requestId = makeRequestId();
-    const timestamp = new Date().toISOString();
+    const timestamp = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
     const expiredAt = addMinutes(new Date(), Number(process.env.DOKU_PAYMENT_DUE_DATE || 60));
 
     const orderRef = await db().collection("Orders").add({
