@@ -2080,6 +2080,55 @@ body{
     margin-bottom:8px !important;
 }
 
+
+/* SOLD OUT PRODUCT STATE - show deactivated products but disable purchase */
+.product-card.sold-out-product{
+    cursor:not-allowed !important;
+    opacity:.72;
+}
+.product-card.sold-out-product:hover{
+    transform:none !important;
+    box-shadow:none !important;
+}
+.product-card.sold-out-product .product-img{
+    filter:grayscale(100%) brightness(.78);
+    opacity:.78;
+}
+.product-card.sold-out-product::after{
+    content:"SOLD OUT";
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    z-index:5;
+    background:rgba(43,30,34,.88);
+    color:#fff;
+    padding:12px 22px;
+    border-radius:999px;
+    font-size:.78rem;
+    font-weight:800;
+    letter-spacing:2.2px;
+    text-transform:uppercase;
+    box-shadow:0 12px 30px rgba(0,0,0,.18);
+    pointer-events:none;
+}
+.product-card.sold-out-product .product-badge{
+    background:#2B1E22 !important;
+    color:#fff !important;
+}
+.product-card.sold-out-product .product-title,
+.product-card.sold-out-product .product-price{
+    opacity:.76;
+}
+.product-btn.sold-out-btn,
+.product-btn:disabled{
+    background:#b8aaa0 !important;
+    border-color:#b8aaa0 !important;
+    color:#fff !important;
+    cursor:not-allowed !important;
+    opacity:.75 !important;
+}
+
 </style>
 
 <style id="veloura-reskin">
@@ -3876,14 +3925,23 @@ html body #cartDrawer .cart-checkout{ padding: 13px !important; font-size: .95re
                 image,
                 gallery,
                 sizes: safeArray(data.sizes, ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL"]),
-                status: data.status || "active",
+                status: data.status || (data.active === false ? "inactive" : "active"),
+                active: data.active !== false,
                 caption: data.caption || data.shortDescription || DEFAULT_PRODUCT_CAPTION,
                 description: data.description || DEFAULT_PRODUCT_DESCRIPTION,
                 goodToKnow: data.goodToKnow || data.good_to_know || DEFAULT_PRODUCT_GOOD_TO_KNOW,
-                stock: Number(data.stock ?? 0)
+                stock: Number(data.stock ?? 0),
+                hasStockControl: data.stock !== undefined && data.stock !== null && data.stock !== ""
             };
 
             return applyFrontendProductImageOverrides(product);
+        }
+
+
+        function isProductSoldOut(product) {
+            if (!product) return true;
+            const status = String(product.status || "").toLowerCase();
+            return product.active === false || status === "inactive" || status === "disabled" || status === "soldout" || status === "sold_out" || (product.hasStockControl && Number(product.stock || 0) <= 0);
         }
 
         async function loadProductsFromFirestore() {
@@ -3896,14 +3954,13 @@ html body #cartDrawer .cart-checkout{ padding: 13px !important; font-size: .95re
             try {
                 const snapshot = await getDocs(collection(db, "Products"));
                 products = snapshot.docs
-                    .map(doc => normalizeProduct(doc.id, doc.data()))
-                    .filter(product => product.status === "active");
+                    .map(doc => normalizeProduct(doc.id, doc.data()));
 
                 if (products.length === 0) {
                     productsGrid.innerHTML = `
                         <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-light);">
                             <h3 style="font-family:var(--font-heading);font-size:2rem;color:var(--text-dark);margin-bottom:10px;">Products Coming Soon</h3>
-                            <p>There are currently no active products.</p>
+                            <p>There are currently no products available.</p>
                         </div>
                     `;
                     return;
@@ -3925,25 +3982,28 @@ html body #cartDrawer .cart-checkout{ padding: 13px !important; font-size: .95re
         function renderProducts() {
             if (!productsGrid) return;
 
-            productsGrid.innerHTML = products.map(product => `
-                <div class="product-card catalog-clean" onclick="openProductModal('${product.id}')">
-                    <span class="product-badge">${product.stock <= 0 ? 'Sold out' : 'New Launch'}</span>
-                    <img src="${product.image}" alt="${product.name}" class="product-img">
-                    <div class="product-info">
-                        <div class="product-category">${product.category}</div>
-                        <h3 class="product-title">${product.name}</h3>
-                        <div class="product-price">
-                            ${product.originalPrice && product.originalPrice > product.salePrice ? `<span class="product-original">RM ${product.originalPrice}</span>` : ""}
-                            <span class="product-current">RM ${product.salePrice}</span>
+            productsGrid.innerHTML = products.map(product => {
+                const soldOut = isProductSoldOut(product);
+                return `
+                    <div class="product-card catalog-clean ${soldOut ? 'sold-out-product' : ''}" ${soldOut ? 'aria-disabled="true"' : `onclick="openProductModal('${product.id}')"`}>
+                        <span class="product-badge">${soldOut ? 'Sold Out' : 'New Launch'}</span>
+                        <img src="${product.image}" alt="${product.name}" class="product-img">
+                        <div class="product-info">
+                            <div class="product-category">${product.category}</div>
+                            <h3 class="product-title">${product.name}</h3>
+                            <div class="product-price">
+                                ${product.originalPrice && product.originalPrice > product.salePrice ? `<span class="product-original">RM ${product.originalPrice}</span>` : ""}
+                                <span class="product-current">RM ${product.salePrice}</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function addToCart(productId, customSize = null) {
             const product = products.find(item => item.id === productId);
-            if (!product) return;
+            if (!product || isProductSoldOut(product)) return;
 
             const sizeInput = document.getElementById(`size-${productId}`);
             const size = customSize || (sizeInput ? sizeInput.value : product.sizes[0]);
@@ -4270,7 +4330,7 @@ function formatVelouraDescription(rawText){
 
 function openProductModal(productId) {
             currentProduct = products.find(item => item.id === productId);
-            if (!currentProduct) return;
+            if (!currentProduct || isProductSoldOut(currentProduct)) return;
             currentSlide = 0;
 
             selectedSize = currentProduct.sizes[0] || "";
@@ -4453,7 +4513,7 @@ function openProductModal(productId) {
         document.getElementById('prevSlide').addEventListener('click', () => changeSlide(-1));
         document.getElementById('nextSlide').addEventListener('click', () => changeSlide(1));
         document.getElementById('modalAddToCart').addEventListener('click', () => {
-            if (!currentProduct) return;
+            if (!currentProduct || isProductSoldOut(currentProduct)) return;
             const size = selectedSize || currentProduct.sizes[0];
             closeProductModal();
             addToCart(currentProduct.id, size);
