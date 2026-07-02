@@ -146,7 +146,7 @@ export default async function handler(req, res) {
     id: String(item.productId || item.id || index + 1),
     name: String(item.name || "Veloura Item").slice(0, 100),
     quantity: Number(item.qty || 1),
-    price: Number(item.price || item.subtotal || 0)
+    price: Number(item.price || item.unitPrice || item.salePrice || ((Number(item.subtotal || 0) / Number(item.qty || 1)) || 0))
   })),
   ...(amount > items.reduce((sum, item) => sum + (Number(item.price || item.subtotal || 0) * Number(item.qty || 1)), 0)
     ? [{
