@@ -29,7 +29,6 @@ function addMinutes(date, minutes) {
     .toISOString()
     .replace(/\.\d{3}Z$/, "Z");
 }
-}
 
 function generateDigest(jsonBody) {
   return crypto.createHash("sha256").update(jsonBody, "utf8").digest("base64");
