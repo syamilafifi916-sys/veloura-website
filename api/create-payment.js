@@ -196,7 +196,7 @@ export default async function handler(req, res) {
     });
 
 const dokuRequestHeaders = {
-  Authorization: `Basic ${Buffer.from(`${process.env.DOKU_API_KEY}:`).toString("base64")}`,
+  Authorization: `Basic ${Buffer.from(`${process.env.DOKU_API_KEY}`).toString("base64")}`,
   "Client-Id": process.env.DOKU_CLIENT_ID,
   "Request-Id": requestId,
   "Request-Timestamp": timestamp,
