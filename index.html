@@ -2081,44 +2081,39 @@ body{
 }
 
 
-/* SOLD OUT PRODUCT STATE - show deactivated products but disable purchase */
+/* SOLD OUT PRODUCT STATE - clickable preview, purchase disabled */
 .product-card.sold-out-product{
-    cursor:not-allowed !important;
-    opacity:.72;
+    cursor:pointer !important;
+    opacity:1 !important;
 }
 .product-card.sold-out-product:hover{
-    transform:none !important;
-    box-shadow:none !important;
+    transform:translateY(-5px) !important;
+    box-shadow:var(--shadow-hover) !important;
 }
 .product-card.sold-out-product .product-img{
-    filter:grayscale(100%) brightness(.78);
-    opacity:.78;
+    filter:none !important;
+    opacity:1 !important;
 }
 .product-card.sold-out-product::after{
     content:"SOLD OUT";
     position:absolute;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%);
+    top:18px;
+    right:16px;
     z-index:5;
-    background:rgba(43,30,34,.88);
+    background:rgba(43,30,34,.9);
     color:#fff;
-    padding:12px 22px;
+    padding:8px 14px;
     border-radius:999px;
-    font-size:.78rem;
+    font-size:.68rem;
     font-weight:800;
-    letter-spacing:2.2px;
+    letter-spacing:1.8px;
     text-transform:uppercase;
-    box-shadow:0 12px 30px rgba(0,0,0,.18);
+    box-shadow:0 10px 24px rgba(0,0,0,.16);
     pointer-events:none;
 }
 .product-card.sold-out-product .product-badge{
-    background:#2B1E22 !important;
+    background:var(--primary) !important;
     color:#fff !important;
-}
-.product-card.sold-out-product .product-title,
-.product-card.sold-out-product .product-price{
-    opacity:.76;
 }
 .product-btn.sold-out-btn,
 .product-btn:disabled{
@@ -2126,7 +2121,7 @@ body{
     border-color:#b8aaa0 !important;
     color:#fff !important;
     cursor:not-allowed !important;
-    opacity:.75 !important;
+    opacity:.85 !important;
 }
 
 </style>
@@ -3985,7 +3980,7 @@ html body #cartDrawer .cart-checkout{ padding: 13px !important; font-size: .95re
             productsGrid.innerHTML = products.map(product => {
                 const soldOut = isProductSoldOut(product);
                 return `
-                    <div class="product-card catalog-clean ${soldOut ? 'sold-out-product' : ''}" ${soldOut ? 'aria-disabled="true"' : `onclick="openProductModal('${product.id}')"`}>
+                    <div class="product-card catalog-clean ${soldOut ? 'sold-out-product' : ''}" onclick="openProductModal('${product.id}')">
                         <span class="product-badge">${soldOut ? 'Sold Out' : 'New Launch'}</span>
                         <img src="${product.image}" alt="${product.name}" class="product-img">
                         <div class="product-info">
@@ -4330,7 +4325,7 @@ function formatVelouraDescription(rawText){
 
 function openProductModal(productId) {
             currentProduct = products.find(item => item.id === productId);
-            if (!currentProduct || isProductSoldOut(currentProduct)) return;
+            if (!currentProduct) return;
             currentSlide = 0;
 
             selectedSize = currentProduct.sizes[0] || "";
@@ -4369,6 +4364,13 @@ function openProductModal(productId) {
             const stockNote = document.getElementById('modalStockNote');
             if (stockNote) stockNote.innerHTML = "<strong>Model's sizing:</strong>Lunia is 160cm | 50KG | Bust 33inch | Waist 27inch | Hip 38inch | Wear S.";
 
+            const modalAddToCart = document.getElementById('modalAddToCart');
+            const soldOut = isProductSoldOut(currentProduct);
+            if (modalAddToCart) {
+                modalAddToCart.disabled = soldOut;
+                modalAddToCart.classList.toggle('sold-out-btn', soldOut);
+                modalAddToCart.textContent = soldOut ? 'Sold Out' : 'Add to Cart';
+            }
             productModal.classList.add('active');
             overlay.classList.add('active');
         }
@@ -4416,6 +4418,15 @@ function openProductModal(productId) {
         };
 
         function checkout() {
+            if (cart.some(item => {
+                const product = products.find(productItem => productItem.id === item.id);
+                return product && isProductSoldOut(product);
+            })) {
+                alert("Some items in your cart are sold out. Please remove them before checkout.");
+                return;
+            }
+
+
             if (cart.length === 0) {
                 alert('Your shopping bag is empty.');
                 return;
