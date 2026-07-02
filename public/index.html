@@ -3902,25 +3902,25 @@ html body #cartDrawer .cart-checkout{ padding: 13px !important; font-size: .95re
                     .filter(product => product.status === "active");
 
                 if (products.length === 0) {
-                    products = FALLBACK_PRODUCTS;
                     productsGrid.innerHTML = `
-                        <div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--text-light);">
-                            No active product found in Firestore. Showing fallback product.
+                        <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-light);">
+                            <h3 style="font-family:var(--font-heading);font-size:2rem;color:var(--text-dark);margin-bottom:10px;">Products Coming Soon</h3>
+                            <p>There are currently no active products.</p>
                         </div>
                     `;
+                    return;
                 }
 
                 renderProducts();
             } catch (error) {
                 console.error("Firestore product load error:", error);
-                products = FALLBACK_PRODUCTS;
-                renderProducts();
-
-                productsGrid.insertAdjacentHTML("afterbegin", `
-                    <div style="grid-column:1/-1;background:#fff3f3;border:1px solid #ffd0d0;border-radius:12px;padding:16px;color:#8a2a2a;margin-bottom:10px;">
-                        Product database cannot be read yet. Check Firestore Rules for collection <strong>Products</strong>.
+                productsGrid.innerHTML = `
+                    <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-light);">
+                        <h3 style="font-family:var(--font-heading);font-size:2rem;color:var(--text-dark);margin-bottom:10px;">Unable to load products</h3>
+                        <p>Please try again later.</p>
                     </div>
-                `);
+                `;
+                return;
             }
         }
 
