@@ -747,13 +747,13 @@ img { max-width: 100%; height: auto; display: block; }
         .cart-items { flex: 1; overflow-y: auto; padding: 24px; }
         .cart-empty { text-align: center; color: var(--text-light); padding: 60px 20px; }
         .cart-empty-icon { font-size: 3rem; color: var(--border); margin-bottom: 20px; }
-        .cart-item { display: grid; grid-template-columns: auto 1fr; gap: 15px; padding: 20px 0; border-bottom: 1px solid var(--border); }
-        .cart-item-img { width: 80px; height: 100px; object-fit: cover; border-radius: var(--radius); }
-        .cart-item-title { font-size: 1rem; font-weight: 600; color: var(--text-dark); margin-bottom: 5px; }
-        .cart-item-meta { font-size: 0.875rem; color: var(--text-light); }
-        .cart-item-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
-        .cart-item-price { font-size: 1.125rem; font-weight: 700; color: var(--text-dark); }
-        .cart-item-remove { background: none; color: var(--error); font-size: 0.875rem; font-weight: 500; }
+        .cart-item { display: grid; grid-template-columns: auto 1fr; gap: 18px; padding: 24px 0; border-bottom: 1px solid var(--border); align-items: flex-start; }
+        .cart-item-img { width: 104px; height: 132px; object-fit: cover; border-radius: var(--radius); }
+        .cart-item-title { font-size: 1.08rem; font-weight: 600; color: var(--text-dark); margin-bottom: 6px; line-height: 1.3; }
+        .cart-item-meta { font-size: 0.95rem; color: var(--text-light); }
+        .cart-item-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; }
+        .cart-item-price { font-size: 1.22rem; font-weight: 700; color: var(--text-dark); }
+        .cart-item-remove { background: none; color: var(--error); font-size: 0.9rem; font-weight: 500; }
         .cart-drawer-footer { padding: 24px; border-top: 1px solid var(--border); }
         .cart-total { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
         .cart-total-label { font-size: 1.125rem; font-weight: 600; color: var(--text-dark); }
@@ -1362,12 +1362,12 @@ img { max-width: 100%; height: auto; display: block; }
         padding:18px;
     }
     .cart-item{
-        grid-template-columns:72px 1fr;
-        gap:12px;
+        grid-template-columns:92px 1fr;
+        gap:14px;
     }
     .cart-item-img{
-        width:72px;
-        height:92px;
+        width:92px;
+        height:116px;
     }
 
     .product-modal{
@@ -2698,8 +2698,9 @@ html body #productModal .product-modal-gallery img,
 html body #productModal #modalImage{
   width: 100% !important;
   height: 100% !important;
-  object-fit: cover !important;
-  object-position: center top !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  background: #f3f0ec !important;
 }
 
 /* FONT SIZES: smaller across modal text */
@@ -3051,6 +3052,121 @@ html body #productModal .product-thumb-btn{
         height: 62px !important;
     }
 }
+</style>
+
+<style id="veloura-feedback-r5-image-cart">
+/* R5 (CSS only, no backend changes) — final override, last in cascade.
+   1) Product-popup image shows the FULL photo (never cropped).
+   2) Cart line items enlarged for proper viewing. */
+
+/* --- Product modal image: full photo, sized to the SCREEN HEIGHT ---
+   The popup frame is bounded by viewport height (vh), so the whole photo is
+   visible the instant the popup opens — at 100% zoom, on any screen size.
+   (Previously the frame was sized by its width, making the popup taller than
+   the screen, so it looked cropped until you zoomed out.) */
+
+/* Desktop / tablet */
+@media (min-width: 768px){
+    html body #productModal{
+        padding: 3vh 24px !important;
+        align-items: center !important;
+    }
+    html body #productModal .product-modal-card{
+        width: auto !important;
+        max-width: 94vw !important;
+        max-height: 92vh !important;
+        align-items: stretch !important;
+        grid-template-columns: min(54vh, 46vw) minmax(340px, 460px) !important;
+    }
+    html body #productModal .product-modal-gallery{
+        aspect-ratio: auto !important;
+        width: 100% !important;
+        height: 80vh !important;
+        min-height: 0 !important;
+        max-height: 80vh !important;
+    }
+    html body #productModal .product-modal-gallery img,
+    html body #productModal #modalImage{
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain !important;
+        object-position: center !important;
+        background: #f3f0ec !important;
+    }
+    html body #productModal .product-modal-info{
+        max-height: 80vh !important;
+        overflow-y: auto !important;
+    }
+}
+
+/* Mobile: full-screen popup already scrolls, so show the photo at its
+   natural height (full image, never cropped). */
+@media (max-width: 767px){
+    html body #productModal .product-modal-gallery{
+        aspect-ratio: auto !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+    }
+    html body #productModal .product-modal-gallery img,
+    html body #productModal #modalImage{
+        width: 100% !important;
+        height: auto !important;
+        max-height: none !important;
+        object-fit: contain !important;
+        object-position: center !important;
+        background: #f3f0ec !important;
+    }
+}
+
+/* --- Cart line items: bigger thumbnail + text --- */
+html body #cartItems .cart-item{
+    grid-template-columns: 104px 1fr !important;
+    gap: 18px !important;
+    padding: 24px 0 !important;
+    align-items: flex-start !important;
+}
+html body #cartItems .cart-item-img{
+    width: 104px !important;
+    height: 132px !important;
+    object-fit: cover !important;
+}
+html body #cartItems .cart-item-title{
+    font-size: 1.1rem !important;
+    line-height: 1.3 !important;
+    margin-bottom: 6px !important;
+}
+html body #cartItems .cart-item-meta{ font-size: 0.96rem !important; }
+html body #cartItems .cart-item-footer{ margin-top: 16px !important; }
+html body #cartItems .cart-item-price{ font-size: 1.24rem !important; }
+html body #cartItems .cart-item-remove{ font-size: 0.92rem !important; }
+
+@media (max-width: 767px){
+    html body #cartItems .cart-item{
+        grid-template-columns: 92px 1fr !important;
+        gap: 14px !important;
+    }
+    html body #cartItems .cart-item-img{
+        width: 92px !important;
+        height: 116px !important;
+    }
+}
+
+/* --- Cart: shrink the summary/price block below so the product list gets more room --- */
+html body #cartDrawer .cart-items{ flex: 1 1 auto !important; }
+html body #cartDrawer .cart-drawer-footer{ padding: 14px 20px 16px !important; }
+html body #cartDrawer .promo-box{ padding: 11px 13px !important; margin-bottom: 10px !important; }
+html body #cartDrawer .promo-toggle{ margin-bottom: 0 !important; font-size: .8rem !important; }
+html body #cartDrawer .cart-summary-row{ font-size: .82rem !important; margin-bottom: 4px !important; }
+html body #cartDrawer #freeDeliveryNote{ font-size: .72rem !important; line-height: 1.3 !important; margin: 3px 0 8px !important; }
+html body #cartDrawer .cart-total{ margin-bottom: 8px !important; }
+html body #cartDrawer .cart-total-label{ font-size: 1rem !important; }
+html body #cartDrawer .cart-total-amount{ font-size: 1.15rem !important; }
+html body #cartDrawer .cart-agreements{ margin-bottom: 8px !important; }
+html body #cartDrawer .cart-agreement{ gap: 8px !important; margin-bottom: 5px !important; }
+html body #cartDrawer .cart-agreement input{ margin-top: 2px !important; }
+html body #cartDrawer .cart-agreement label{ font-size: .72rem !important; line-height: 1.28 !important; }
+html body #cartDrawer .cart-checkout{ padding: 13px !important; font-size: .95rem !important; }
 </style>
 
 </head>
